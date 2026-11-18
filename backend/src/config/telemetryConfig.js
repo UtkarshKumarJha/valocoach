@@ -7,56 +7,23 @@ const FEATURE_VERSION = '2.0.0';
 // 0a. Supported Queues: competitive, unrated, premier
 const SUPPORTED_QUEUES = ['competitive', 'unrated', 'premier'];
 
-const UNSUPPORTED_MODES = [
-  'deathmatch',
-  'ffa',
-  'spikerush',
-  'spike rush',
-  'escalation',
-  'swiftplay',
-  'snowball',
-  'replication',
-  'custom'
-];
 
 /**
- * Checks whether a match queue or mode is supported for deep telemetry.
- * Inspects all possible queue/mode properties from Henrik / Riot payloads.
+ * Allowlist gate: a match is analyzed only if its queue id is competitive, unrated or premier.
+ * Queue id is preferred over the mode name because Riot labels some non-5v5 queues (e.g. skirmish_2v2)
+ * with mode "Competitive". Anything else, including new modes, is skipped with a recorded reason.
  */
 function isSupportedQueue(match) {
   if (!match) return { supported: false, reason: 'missing_payload' };
+  const str = v => (typeof v === 'string' ? v : (v?.id || v?.name || null));
+  const queueId = str(match.queue) || str(match.metadata?.queue) ||
+    (typeof match.metadata?.mode_id === 'string' ? match.metadata.mode_id : null);
+  const modeName = str(match.mode) || str(match.metadata?.mode);
+  const rawQueue = String(queueId || modeName || '').toLowerCase().trim();
 
-  const rawQueue = (
-    match.queue || 
-    match.metadata?.queue || 
-    match.mode || 
-    match.metadata?.mode || 
-    match.metadata?.mode_id || 
-    ''
-  ).toLowerCase().trim();
-
-  // Explicit check for supported queues
-  for (const q of SUPPORTED_QUEUES) {
-    if (rawQueue === q || rawQueue.includes(q)) {
-      return { supported: true, queue: q };
-    }
-  }
-
-  // Check if it's explicitly an unsupported mode
-  for (const unsup of UNSUPPORTED_MODES) {
-    if (rawQueue.includes(unsup)) {
-      return { supported: false, reason: `unsupported_mode: ${unsup}`, rawQueue };
-    }
-  }
-
-  // Fallback: Check round count. Real 5v5 competitive/unrated matches have >= 13 rounds played
-  const roundCount = match.rounds?.length || match.metadata?.rounds_played || 0;
-  if (roundCount <= 1) {
-    return { supported: false, reason: 'unsupported_mode: deathmatch_or_single_round', rawQueue };
-  }
-
-  // Default to supported if competitive structure with 12+ rounds
-  return { supported: true, queue: 'competitive' };
+  if (!rawQueue) return { supported: false, reason: 'missing_queue', rawQueue };
+  if (SUPPORTED_QUEUES.includes(rawQueue)) return { supported: true, queue: rawQueue };
+  return { supported: false, reason: `unsupported_mode: ${rawQueue}`, rawQueue };
 }
 
 /**
@@ -94,12 +61,14 @@ const PROVISIONAL_TIER_TARGETS = {
  * Maps any rank tier string to one of the 4 collapsed provisional bands
  */
 function getTierBand(rankStr = '') {
-  const r = (rankStr || '').toLowerCase().trim();
+  if (!rankStr || typeof rankStr !== 'string') return null;
+  const r = rankStr.toLowerCase().trim();
+  if (r === 'unranked' || r === 'rank unavailable' || r === 'unknown' || r === '') return null;
   if (r.includes('iron') || r.includes('bronze')) return 'Iron-Bronze';
   if (r.includes('silver') || r.includes('gold')) return 'Silver-Gold';
   if (r.includes('plat') || r.includes('diamond')) return 'Plat-Diamond';
   if (r.includes('ascendant') || r.includes('immortal') || r.includes('radiant')) return 'Ascendant+';
-  return 'Silver-Gold'; // Default
+  return null; // Never fallback to hardcoded Silver-Gold
 }
 
 /**
@@ -149,28 +118,123 @@ const SPATIAL_CONFIG = {
   ISOLATED_ALLY_DIST_METERS: 25         // Distance to nearest ally > 25m
 };
 
-// 3. Habit Tier Rules
+// 3. Role Expectations & Flaw Filter (Single Source of Truth)
+const ROLE_EXPECTATIONS = {
+  Duelist: {
+    attack: {
+      positioning: 'Front of team, entry',
+      flaws: ['LETS_TEAMMATES_ENTER_FIRST', 'DRY_PEEK', 'OPENING_DUEL_LOSS'],
+      positives: ['TAKES_SPACE', 'OPENING_DUEL_WIN']
+    },
+    defense: {
+      positioning: 'Contests opening space, trades early',
+      flaws: ['DRY_PEEK', 'DOESNT_TRADE'],
+      positives: ['TRADES_WELL']
+    }
+  },
+  Initiator: {
+    attack: {
+      positioning: 'Mid-pack with duelists, supports entries',
+      flaws: ['ISOLATED_PLAY', 'DRY_PEEK', 'DOESNT_TRADE'],
+      positives: ['STAYS_WITH_TEAM', 'TRADES_WELL']
+    },
+    defense: {
+      positioning: 'Info recon & retake support',
+      flaws: ['DRY_PEEK', 'DOESNT_TRADE'],
+      positives: ['TRADES_WELL']
+    }
+  },
+  Controller: {
+    attack: {
+      positioning: 'With team, executes smoke line',
+      flaws: ['ISOLATED_PLAY', 'DRY_PEEK', 'DOESNT_TRADE'],
+      positives: ['STAYS_WITH_TEAM', 'TRADES_WELL']
+    },
+    defense: {
+      positioning: 'Smoke delay and site anchor',
+      flaws: ['DRY_PEEK', 'DOESNT_TRADE'],
+      positives: ['TRADES_WELL']
+    }
+  },
+  Sentinel: {
+    attack: {
+      positioning: 'Flank/lurk is expected. Never flag isolation or untradeable deaths.',
+      flaws: ['UNSYNCED_LURK_DEATH', 'DRY_PEEK'],
+      positives: ['SYNCED_LURK_KILL', 'TRADES_WELL']
+    },
+    defense: {
+      positioning: 'Anchor site hold. SOLO_HOLD_VS_STACK applies.',
+      flaws: ['SOLO_HOLD_VS_STACK', 'DRY_PEEK', 'DOESNT_TRADE'],
+      positives: ['ANCHORED_WITH_SUPPORT', 'TRADES_WELL']
+    }
+  }
+};
+
+/**
+ * Checks if a situation detector tag represents a flaw for a given role and side.
+ * Single source of truth across flaws, header stats, and replay cues.
+ */
+function isFlawForRole(tag, role, side = 'attack') {
+  const normRole = (role || 'Flex').trim();
+  const normSide = (side || 'attack').toLowerCase();
+
+  // Sentinel Attack: flank/lurk is EXPECTED. Never flag isolation or untradeable deaths.
+  if (normRole === 'Sentinel') {
+    if (normSide === 'attack') {
+      if (tag === 'ISOLATED_PLAY' || tag === 'UNTRADEABLE_DEATH' || tag === 'DOESNT_TRADE') {
+        return false;
+      }
+      return tag === 'UNSYNCED_LURK_DEATH' || tag === 'DRY_PEEK';
+    }
+    if (normSide === 'defense') {
+      return tag === 'SOLO_HOLD_VS_STACK' || tag === 'DRY_PEEK' || tag === 'DOESNT_TRADE';
+    }
+  }
+
+  // Duelist Attack: entry & space creation
+  if (normRole === 'Duelist') {
+    if (normSide === 'attack') {
+      if (tag === 'ISOLATED_PLAY') return false;
+      return tag === 'LETS_TEAMMATES_ENTER_FIRST' || tag === 'DRY_PEEK' || tag === 'OPENING_DUEL_LOSS';
+    }
+    return tag === 'DRY_PEEK' || tag === 'DOESNT_TRADE';
+  }
+
+  // Initiator & Controller Attack: ISOLATED_PLAY applies!
+  if (normRole === 'Initiator' || normRole === 'Controller') {
+    if (normSide === 'attack') {
+      return tag === 'ISOLATED_PLAY' || tag === 'DRY_PEEK' || tag === 'DOESNT_TRADE';
+    }
+    return tag === 'DRY_PEEK' || tag === 'DOESNT_TRADE';
+  }
+
+  const exp = ROLE_EXPECTATIONS[normRole]?.[normSide];
+  return exp?.flaws ? exp.flaws.includes(tag) : false;
+}
+
+// 3. Habit Tier Rules (PROVISIONAL until labeled rounds + cohort baselines exist)
+// Evaluated per detector x role x side cell. "Matches" = matches where that cell had >= 1 opportunity.
 const HABIT_RULES = {
-  MIN_OPPORTUNITIES: 15,
-  MIN_MATCHES: 5,
-  OCCASIONAL_MAX_PER_HALF: 2,           // <= 2 per half: never flag
-  PATTERN_MIN_PER_HALF: 3,              // >= 3 per half in >= 50% halves AND >= 40% matches
-  PATTERN_MIN_HALF_PCT: 0.50,
-  PATTERN_MIN_MATCH_PCT: 0.40,
-  STRONG_MIN_PER_HALF: 5,               // >= 5 per half in >= 70% halves AND >= 60% matches
-  STRONG_MIN_HALF_PCT: 0.70,
-  STRONG_MIN_MATCH_PCT: 0.60
+  MIN_OPPORTUNITIES: 15,        // n >= 15
+  MIN_MATCHES: 5,               // >= 5 matches with an opportunity
+  MIN_EVENTS: 8,                // k >= 8
+  MIN_MATCH_PCT: 0.40,          // events in >= 40% of those matches
+  PATTERN_MIN_DIFF: 0.10,       // pattern: Wilson lower > p0 AND rate - p0 >= 10pp
+  STRONG_LOWER_MARGIN: 0.10,    // strong: Wilson lower > p0 + 10pp ...
+  STRONG_MIN_DIFF: 0.20,        // ... AND rate - p0 >= 20pp
+  MIN_PEER_OPPORTUNITIES: 100   // pooled peer opps per cell, else "no baseline"
 };
 
 module.exports = {
   FEATURE_VERSION,
   SUPPORTED_QUEUES,
-  UNSUPPORTED_MODES,
   isSupportedQueue,
   PROVISIONAL_TIER_TARGETS,
   getTierBand,
   loadCohortBaselines,
   COORDS_PER_METER,
   SPATIAL_CONFIG,
+  ROLE_EXPECTATIONS,
+  isFlawForRole,
   HABIT_RULES
 };

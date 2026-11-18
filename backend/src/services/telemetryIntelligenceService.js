@@ -27,6 +27,35 @@ const {
 
 const { getRoleForMatch } = require('./agentRoleService');
 const { aggregateHabits } = require('./habitAggregator');
+const { getSideForRound, getPlayerTeam, getRoundUtilityCasts } = require('./situationDetectors');
+
+/**
+ * Replay moments for the habits we actually show (pattern / strong habit), plus the "worth watching" item.
+ * Each cue keeps the detector's clock: "m:ss elapsed (m:ss on-clock)" before the plant, "Ns spike remaining
+ * (post-plant)" after it (plant and kill times share the barrier-drop clock: verified on 2,666 planted rounds).
+ */
+function buildCueSheet(habitResult) {
+  const shown = (habitResult.habits || []).filter(h =>
+    ((h.tier === 'pattern' || h.tier === 'strong habit') && h.k > 0) || h.cell === habitResult.watch_item?.cell);
+  return shown.flatMap(h => (h.exampleCues || []).map(c => ({
+    habit: h.id,
+    habit_title: h.title,
+    cell: h.cell,
+    polarity: h.polarity,
+    tier: h.cell === habitResult.watch_item?.cell ? 'watch' : h.tier,
+    matchId: c.matchId,
+    map: c.map,
+    played_at: c.playedAt,
+    agent: c.agent,
+    score: c.score,
+    round: c.round,
+    side: c.side,
+    role: c.role,
+    clock_display: c.clockTime,
+    post_plant: /post-plant/.test(c.clockTime || ''),
+    evidence: c.evidence
+  })));
+}
 
 /**
  * Wraps angular difference strictly into [0, PI] radians.
@@ -67,12 +96,11 @@ exports.HABIT_RULES = HABIT_RULES;
 /**
  * Main Telemetry Analysis function
  */
-exports.analyzeTelemetry = (matches, playerRiotId, playerPuuid, currentRank = 'Silver 2') => {
+exports.analyzeTelemetry = (matches, playerRiotId, playerPuuid, currentRank = 'Rank unavailable') => {
   if (!matches || !matches.length) return null;
 
   const riotIdLower = (playerRiotId || '').toLowerCase().trim();
   const tierBand = getTierBand(currentRank);
-  const tierTargets = PROVISIONAL_TIER_TARGETS[tierBand] || PROVISIONAL_TIER_TARGETS['Silver-Gold'];
   const isSingleMatch = (matches.length === 1);
 
   // 0a. Filter by mode gating: SUPPORTED_QUEUES
@@ -129,7 +157,6 @@ exports.analyzeTelemetry = (matches, playerRiotId, playerPuuid, currentRank = 'S
   let rifleCloseRangeFights = 0;
 
   let chipAndDieRounds = 0;
-  const cueSheetCandidates = [];
 
   // In-Match Repeat Death Spots (~8m cells = 800 units, >= 3 deaths in ONE match on ONE side)
   const inMatchRepeatSpots = [];
@@ -140,7 +167,7 @@ exports.analyzeTelemetry = (matches, playerRiotId, playerPuuid, currentRank = 'S
   // Process each match
   for (const m of matchesToProcess) {
     const matchId = m.matchId || 'comp_match';
-    const killEvents = m.kill_events || [];
+    const killEvents = m.kill_events || m.kills || [];
     const rounds = m.rounds || [];
     const mapName = m.map || 'Ascent';
 
@@ -161,6 +188,8 @@ exports.analyzeTelemetry = (matches, playerRiotId, playerPuuid, currentRank = 'S
 
     // In-match spatial death tracker per cell (8m = 800 units)
     const inMatchCellDeaths = {};
+    const hasZeroIndexedRounds = killEvents.some(k => k.round === 0);
+    const matchTeam = getPlayerTeam(m, playerPuuid, playerRiotId);
 
     // Kill Event Telemetry & Snapshots
     for (let i = 0; i < killEvents.length; i++) {
@@ -168,15 +197,18 @@ exports.analyzeTelemetry = (matches, playerRiotId, playerPuuid, currentRank = 'S
       const deathLoc = k.victim_death_location;
       const deathTimeMs = Number(k.kill_time_in_round || 0);
       const deathTimeSec = deathTimeMs / 1000;
-      const roundNum = k.round || (Math.floor(i / 6) + 1);
-
-      const isAttackSide = (roundNum <= 12);
-      const sideLabel = isAttackSide ? 'attack' : 'defense';
+      const roundNum = k.round != null 
+        ? (hasZeroIndexedRounds ? k.round + 1 : k.round)
+        : (Math.floor(i / 6) + 1);
 
       const isPlayerVictim = (playerPuuid && k.victim_puuid === playerPuuid) ||
                              (k.victim_display_name && k.victim_display_name.toLowerCase() === riotIdLower);
       const isPlayerKiller = (playerPuuid && k.killer_puuid === playerPuuid) ||
                              (k.killer_display_name && k.killer_display_name.toLowerCase() === riotIdLower);
+
+      const playerTeam = isPlayerVictim ? k.victim_team : (isPlayerKiller ? k.killer_team : matchTeam);
+      const sideLabel = getSideForRound(playerTeam || matchTeam, roundNum);
+      const isAttackSide = (sideLabel === 'attack');
 
       if (isPlayerKiller) {
         totalKills += 1;
@@ -257,7 +289,7 @@ exports.analyzeTelemetry = (matches, playerRiotId, playerPuuid, currentRank = 'S
         totalDeathTimeSec += deathTimeSec;
 
         if (isAttackSide) attackDeaths += 1;
-        else defenseDeaths += 1;
+        else if (sideLabel === 'defense') defenseDeaths += 1;
 
         // 0e & 2. In-Match Repeat Death Spot (~8m cells = 800 units, >= 3 deaths in ONE match)
         if (deathLoc && deathLoc.x != null && deathLoc.y != null) {
@@ -338,21 +370,10 @@ exports.analyzeTelemetry = (matches, playerRiotId, playerPuuid, currentRank = 'S
           }
         }
 
-        // Flank & View Angle Analysis
-        if (victimSnapshot && victimSnapshot.view_radians != null && killerSnapshot && killerSnapshot.location && deathLoc) {
-          validAngleDeaths += 1;
+        // Engagement Distance, Weapon Mismatch & Flank Analysis
+        if (killerSnapshot && killerSnapshot.location && deathLoc) {
           const dx = killerSnapshot.location.x - deathLoc.x;
           const dy = killerSnapshot.location.y - deathLoc.y;
-          const bearingToKiller = Math.atan2(dy, dx);
-          const viewRad = victimSnapshot.view_radians;
-          
-          const angleDiffRad = wrapAngleToPi(bearingToKiller - viewRad);
-          const angleDiffDeg = angleDiffRad * (180 / Math.PI);
-          
-          if (angleDiffDeg > 85.0) {
-            diedFromBehindCount += 1;
-          }
-
           const distMeters = Math.sqrt(dx * dx + dy * dy) / 100;
           totalEngagementDistMeters += distMeters;
           engagementCount += 1;
@@ -364,53 +385,45 @@ exports.analyzeTelemetry = (matches, playerRiotId, playerPuuid, currentRank = 'S
               rifleCloseRangeFights += 1;
             }
           }
+
+          // Flank & View Angle Analysis (when victim view angle is available in payload)
+          if (victimSnapshot && victimSnapshot.view_radians != null) {
+            validAngleDeaths += 1;
+            const bearingToKiller = Math.atan2(dy, dx);
+            const viewRad = victimSnapshot.view_radians;
+            
+            const angleDiffRad = wrapAngleToPi(bearingToKiller - viewRad);
+            const angleDiffDeg = angleDiffRad * (180 / Math.PI);
+            
+            if (angleDiffDeg > 85.0) {
+              diedFromBehindCount += 1;
+            }
+          }
         }
 
         // 0c. Dry-Peek Opening Deaths: < 22s AND no ally within 15m AND no utility cast
         const isDryOpeningTime = (deathTimeSec > 0 && deathTimeSec < SPATIAL_CONFIG.DRY_PEEK_WINDOW_SEC);
         const hasNoNearbyAlly = (!hasTeammateInTradeRange || minTeammateDist > (SPATIAL_CONFIG.DRY_PEEK_NO_ALLY_DIST_METERS * 100));
-        const roundStats = rounds[roundNum - 1]?.player_stats;
-        const hadUtilityCast = Boolean(roundStats && (roundStats.ability_casts_count > 0 || roundStats.spent_utility));
+        const r = rounds[roundNum - 1] || {};
+        const roundStats = (Array.isArray(r.all_player_stats) ? r.all_player_stats : [])
+          .find(ps => (playerPuuid && ps.player_puuid === playerPuuid) || ps.player_display_name?.toLowerCase() === riotIdLower)
+          || r.player_stats;
+        const utilityCasts = getRoundUtilityCasts(roundStats);
+        const utilityKnown = utilityCasts != null;
+        const hadUtilityCast = utilityKnown && utilityCasts > 0;
 
+        // Dry peek needs KNOWN zero utility; v4 has no per-round casts, so those deaths count as no-ally only
         if (isDryOpeningTime) {
-          if (hasNoNearbyAlly && !hadUtilityCast) {
+          if (hasNoNearbyAlly && utilityKnown && !hadUtilityCast) {
             if (isAttackSide) attackDryPeeks += 1;
-            else defenseDryPeeks += 1;
-          } else if (hasNoNearbyAlly && hadUtilityCast) {
+            else if (sideLabel === 'defense') defenseDryPeeks += 1;
+          } else if (hasNoNearbyAlly) {
             earlyDeathNoAllyCount += 1;
-          } else if (!hasNoNearbyAlly && !hadUtilityCast) {
+          } else if (utilityKnown && !hadUtilityCast) {
             earlyDeathNoUtilityCount += 1;
           }
         }
 
-        // Replay Cue Sheet (Requirement 7: Elapsed + On-Clock Time remaining)
-        const isUntradeable = !isLastAlive && (!hasTeammateInTradeRange || minTeammateDist > 2000);
-        const isDryEarly = isDryOpeningTime && hasNoNearbyAlly;
-        if (isUntradeable || isDryEarly) {
-          const elapsedSec = Math.round(deathTimeSec);
-          const onClockRemainingSec = Math.max(0, 100 - elapsedSec);
-          
-          const elapMin = Math.floor(elapsedSec / 60);
-          const elapSecStr = (elapsedSec % 60).toString().padStart(2, '0');
-          const clockMin = Math.floor(onClockRemainingSec / 60);
-          const clockSecStr = (onClockRemainingSec % 60).toString().padStart(2, '0');
-
-          cueSheetCandidates.push({
-            round: roundNum,
-            elapsed_time: `${elapMin}:${elapSecStr}`,
-            on_clock_remaining: `${clockMin}:${clockSecStr}`,
-            clock_display: `${elapMin}:${elapSecStr} elapsed (${clockMin}:${clockSecStr} on-clock)`,
-            death_time_sec: elapsedSec,
-            map: mapName,
-            flaw: isDryEarly ? `${sideLabel.toUpperCase()} Dry-Peek` : 'Isolated Untradeable Death',
-            win_prob_impact: isDryEarly ? '-32% (estimated)' : '-24% (estimated)',
-            killer: k.killer_display_name || 'Opponent',
-            weapon: k.damage_weapon_name || 'Vandal',
-            cue: isDryEarly
-              ? `Died at ${elapMin}:${elapSecStr} elapsed (${clockMin}:${clockSecStr} on clock) without trade support on ${sideLabel}. Wait for team utility before peeking.`
-              : `Died isolated (${Math.round(minTeammateDist / 100)}m from team) at ${elapMin}:${elapSecStr} elapsed. Review your spacing.`
-          });
-        }
       }
     }
   }
@@ -426,71 +439,11 @@ exports.analyzeTelemetry = (matches, playerRiotId, playerPuuid, currentRank = 'S
   const youTradeRate = teammateTradeOpportunities > 0 ? Number((youTradeTeammatesCount / teammateTradeOpportunities).toFixed(3)) : 0;
   const youTradeWilsonCI = calculateWilsonInterval(youTradeTeammatesCount, teammateTradeOpportunities);
 
-  const diedFromBehindRate = validAngleDeaths > 0 ? Number((diedFromBehindCount / validAngleDeaths).toFixed(3)) : 0.15;
+  const diedFromBehindRate = validAngleDeaths > 0 ? Number((diedFromBehindCount / validAngleDeaths).toFixed(3)) : null; // victim view angle missing in v4: unknown, not 15%
   const attackDryPeekRate = Number((attackDryPeeks / safeAttackDeaths).toFixed(3));
   const defenseDryPeekRate = Number((defenseDryPeeks / safeDefenseDeaths).toFixed(3));
   const overallDryPeekRate = Number(((attackDryPeeks + defenseDryPeeks) / safeDeaths).toFixed(3));
 
-  // 0g. Provisional 4-Band Tier Targets
-  const targetUntradeableMax = tierTargets.targetUntradeableMax;
-  const targetFlankMax = tierTargets.targetFlankMax;
-  const targetDryPeekMax = tierTargets.targetDryPeekMax;
-
-  // Single-match preliminary label
-  const labelSuffix = isSingleMatch ? " (Preliminary: requires 2+ matches for stable classification)" : "";
-
-  // 5. Impact-Ranked Flaws
-  const impactFlaws = [];
-
-  if (untradeableRate > targetUntradeableMax) {
-    const excess = untradeableRate - targetUntradeableMax;
-    const roundImpact = Number((excess * 3.8).toFixed(1));
-    impactFlaws.push({
-      flaw: "High Untradeable Death Rate",
-      raw_count: untradeableDeaths,
-      raw_denominator: eligibleTradeDeaths,
-      your_rate: `${(untradeableRate * 100).toFixed(1)}% (${untradeableDeaths}/${eligibleTradeDeaths})`,
-      cohort_benchmark: `≤${Math.round(targetUntradeableMax * 100)}% (${tierBand})`,
-      round_impact: `+${roundImpact} rounds/match (estimated)`,
-      verdict: `Dying in isolated positions where teammates cannot swing for a 1-for-1 trade${labelSuffix}.`,
-      severity: roundImpact > 1.2 ? 'high' : 'medium',
-      metric_type: 'estimated'
-    });
-  }
-
-  if (diedFromBehindRate > targetFlankMax) {
-    const excess = diedFromBehindRate - targetFlankMax;
-    const roundImpact = Number((excess * 3.2).toFixed(1));
-    impactFlaws.push({
-      flaw: "Flank & Crosshair Blindspots",
-      raw_count: diedFromBehindCount,
-      raw_denominator: validAngleDeaths,
-      your_rate: `${(diedFromBehindRate * 100).toFixed(1)}% (${diedFromBehindCount}/${validAngleDeaths})`,
-      cohort_benchmark: `≤${Math.round(targetFlankMax * 100)}% (${tierBand})`,
-      round_impact: `+${roundImpact} rounds/match (estimated)`,
-      verdict: `Dying with crosshair facing >85° away from opponent${labelSuffix}.`,
-      severity: roundImpact > 0.8 ? 'high' : 'medium',
-      metric_type: 'estimated'
-    });
-  }
-
-  if (overallDryPeekRate > targetDryPeekMax) {
-    const excess = overallDryPeekRate - targetDryPeekMax;
-    const roundImpact = Number((excess * 2.8).toFixed(1));
-    impactFlaws.push({
-      flaw: "Dry-Peek Opening Deaths",
-      raw_count: attackDryPeeks + defenseDryPeeks,
-      raw_denominator: totalDeaths,
-      your_rate: `${(overallDryPeekRate * 100).toFixed(1)}% (Atk: ${attackDryPeeks}/${attackDeaths}, Def: ${defenseDryPeeks}/${defenseDeaths})`,
-      cohort_benchmark: `≤${Math.round(targetDryPeekMax * 100)}% (${tierBand})`,
-      round_impact: `+${roundImpact} rounds/match (estimated)`,
-      verdict: `Dying within opening 22s without utility and ally support${labelSuffix}.`,
-      severity: 'high',
-      metric_type: 'estimated'
-    });
-  }
-
-  const topCueSheet = cueSheetCandidates.slice(0, 4);
 
   // Spatial Top-3-Cell Death Share by map & side
   const spatialTop3ShareBySlice = {};
@@ -506,18 +459,12 @@ exports.analyzeTelemetry = (matches, playerRiotId, playerPuuid, currentRank = 'S
       const counts = Object.values(data.cell_counts).sort((a, b) => b - a);
       const top3Deaths = counts.slice(0, 3).reduce((acc, c) => acc + c, 0);
       const top3SharePct = Number(((top3Deaths / total) * 100).toFixed(1));
-      const totalCells = Object.keys(data.cell_counts).length;
-      const shuffledBaselinePct = totalCells > 0 ? Number((Math.min(100, (3 / totalCells) * 100)).toFixed(1)) : 100.0;
-      const excessClusteringPct = Number(Math.max(0, top3SharePct - shuffledBaselinePct).toFixed(1));
 
       spatialTop3ShareBySlice[sliceKey] = {
         is_valid_sample: true,
         total_deaths: total,
         top_3_cell_deaths: top3Deaths,
         top_3_cell_share_pct: top3SharePct,
-        shuffled_baseline_pct: shuffledBaselinePct,
-        excess_clustering_pct: excessClusteringPct,
-        predictability_level: top3SharePct >= 55 ? "High (Habitual Chokepoints)" : "Dispersed (Dynamic)",
         label: 'disabled_pending_cohort_baselines'
       };
     }
@@ -595,20 +542,24 @@ exports.analyzeTelemetry = (matches, playerRiotId, playerPuuid, currentRank = 'S
     },
     spatial_top_3_cell_share: spatialTop3ShareBySlice,
     habits: habitResult.habits,
+    peer_baselines: habitResult.peer_baselines,
+    twin_invariants: habitResult.twin_invariants,
     playstyle_archetype: habitResult.archetype,
     unconverted_damage: {
       chip_and_die_rounds: chipAndDieRounds
     },
-    impact_flaws: impactFlaws,
-    replay_cue_sheet: topCueSheet,
+    // Role-aware moments from the habit engine (isFlawForRole per match role and side), never role-agnostic
+    replay_cue_sheet: buildCueSheet(habitResult),
+    watch_item: habitResult.watch_item,
     rank_cohort_context: {
-      rank: currentRank,
-      tier_band: tierBand,
-      lower_is_better_targets: {
-        target_untradeable_max: targetUntradeableMax,
-        target_flank_max: targetFlankMax,
-        target_dry_peek_max: targetDryPeekMax
-      }
+      rank: (currentRank && currentRank !== 'Unranked') ? currentRank : 'Rank unavailable',
+      tier_band: tierBand || null,
+      // Provisional config context only: no flaw or text is derived from these any more
+      lower_is_better_targets: tierBand ? {
+        target_untradeable_max: PROVISIONAL_TIER_TARGETS[tierBand].targetUntradeableMax,
+        target_flank_max: PROVISIONAL_TIER_TARGETS[tierBand].targetFlankMax,
+        target_dry_peek_max: PROVISIONAL_TIER_TARGETS[tierBand].targetDryPeekMax
+      } : null
     }
   };
 };

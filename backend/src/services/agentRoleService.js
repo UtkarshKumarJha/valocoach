@@ -3,8 +3,9 @@ const path = require('path');
 const axios = require('axios');
 
 const CACHE_FILE = path.join(__dirname, '..', 'config', 'agent_roles_cache.json');
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours TTL
 
-// Local fallback seed cache in case of offline execution or network failure
+// Committed fallback table of all known Valorant agents
 const SEED_AGENT_ROLES = {
   // Duelists
   'jett': 'Duelist',
@@ -14,6 +15,8 @@ const SEED_AGENT_ROLES = {
   'yoru': 'Duelist',
   'neon': 'Duelist',
   'iso': 'Duelist',
+  'miks': 'Duelist', // Newly observed competitive duelist
+  'waylay': 'Duelist', // Newly observed competitive duelist
   // Initiators
   'sova': 'Initiator',
   'breach': 'Initiator',
@@ -37,31 +40,45 @@ const SEED_AGENT_ROLES = {
   'chamber': 'Sentinel',
   'deadlock': 'Sentinel',
   'vyse': 'Sentinel',
-  'hush': 'Sentinel' // Test fixture agent
+  'hush': 'Sentinel'
 };
 
 let inMemoryRoles = null;
+let lastSyncTimestamp = 0;
 
 function loadDiskCache() {
-  if (inMemoryRoles) return inMemoryRoles;
+  if (inMemoryRoles && (Date.now() - lastSyncTimestamp < CACHE_TTL_MS)) {
+    return inMemoryRoles;
+  }
 
   if (fs.existsSync(CACHE_FILE)) {
     try {
       const data = JSON.parse(fs.readFileSync(CACHE_FILE, 'utf8'));
-      inMemoryRoles = data;
-      return inMemoryRoles;
+      if (data && typeof data === 'object') {
+        const timestamp = data._lastSync || 0;
+        if (Date.now() - timestamp < CACHE_TTL_MS) {
+          inMemoryRoles = data.roles || data;
+          lastSyncTimestamp = timestamp;
+          return inMemoryRoles;
+        }
+      }
     } catch {
-      // Ignore read error, fallback to seed
+      // Fallback to committed seed table
     }
   }
 
   inMemoryRoles = { ...SEED_AGENT_ROLES };
+  lastSyncTimestamp = Date.now();
   return inMemoryRoles;
 }
 
 function saveDiskCache(roles) {
   try {
-    fs.writeFileSync(CACHE_FILE, JSON.stringify(roles, null, 2), 'utf8');
+    const payload = {
+      _lastSync: Date.now(),
+      roles
+    };
+    fs.writeFileSync(CACHE_FILE, JSON.stringify(payload, null, 2), 'utf8');
   } catch {
     // Non-fatal if disk write fails
   }
@@ -69,7 +86,7 @@ function saveDiskCache(roles) {
 
 /**
  * Syncs latest agents from the official Valorant API content endpoint.
- * Cached to disk and memory; non-blocking.
+ * Cached to disk with 24-hour TTL.
  */
 async function syncAgentRolesFromApi() {
   try {
@@ -77,63 +94,77 @@ async function syncAgentRolesFromApi() {
       timeout: 4000
     });
     if (response.data && Array.isArray(response.data.data)) {
-      const rolesMap = { ...loadDiskCache() };
+      const rolesMap = { ...SEED_AGENT_ROLES };
       for (const agent of response.data.data) {
         if (agent.displayName && agent.role && agent.role.displayName) {
           rolesMap[agent.displayName.toLowerCase()] = agent.role.displayName;
         }
       }
       inMemoryRoles = rolesMap;
+      lastSyncTimestamp = Date.now();
       saveDiskCache(rolesMap);
       return rolesMap;
     }
   } catch {
-    // Graceful fallback to cached roles
+    // Graceful fallback to cached seed roles
   }
   return loadDiskCache();
 }
 
 /**
  * Returns role for a specific agent name (case-insensitive).
+ * Returns null if the agent is unknown.
  */
 function getRoleForAgent(agentName) {
-  if (!agentName) return 'Unknown';
+  if (!agentName) return null;
   const roles = loadDiskCache();
   const cleaned = agentName.toLowerCase().trim();
-  return roles[cleaned] || 'Unknown';
+  return roles[cleaned] || null;
 }
 
 /**
  * Obtains the role of the agent played in THAT specific match.
  * Never uses a player-level primary role.
+ * If unknown agent, logs and returns null.
  */
 function getRoleForMatch(match, playerRiotId, playerPuuid) {
-  if (!match) return 'Unknown';
+  if (!match) return null;
 
+  const matchId = match.matchId || match.metadata?.matchid || 'unknown_match';
   const riotIdLower = (playerRiotId || '').toLowerCase().trim();
 
-  // If match has agent directly
-  if (match.agent) {
-    const r = getRoleForAgent(match.agent);
-    if (r !== 'Unknown') return r;
-  }
-
-  // Find player stats in match if available
-  const allPlayers = match.players?.all_players || [];
+  // Find player stats in all_players or matchInfo
+  const allPlayers = match.all_players || match.players?.all_players || [];
   const playerStats = allPlayers.find(
     p => (playerPuuid && p.puuid === playerPuuid) ||
          (`${p.name}#${p.tag}`.toLowerCase() === riotIdLower) ||
          (p.name && riotIdLower.startsWith(p.name.toLowerCase()))
   );
 
-  if (playerStats && (playerStats.character || playerStats.agent)) {
-    return getRoleForAgent(playerStats.character || playerStats.agent);
+  let agentName = null;
+  if (playerStats) {
+    agentName = playerStats.character || playerStats.agent;
+  }
+  if (!agentName && match.agent) {
+    agentName = match.agent;
   }
 
-  return getRoleForAgent(match.agent) || 'Unknown';
+  if (!agentName) {
+    console.log(`[agentRoleService] Unknown agent for player ${playerRiotId || playerPuuid}, skipping role-conditioned detectors for match ${matchId}`);
+    return null;
+  }
+
+  const role = getRoleForAgent(agentName);
+  if (!role) {
+    console.log(`[agentRoleService] Unknown agent "${agentName}", skipping role-conditioned detectors for match ${matchId}`);
+    return null;
+  }
+
+  return role;
 }
 
 module.exports = {
+  SEED_AGENT_ROLES,
   getRoleForAgent,
   getRoleForMatch,
   syncAgentRolesFromApi,

@@ -12,7 +12,14 @@ ml/.env
 # Caches & temporary files
 .cache/
 *cache*/
+data/
+backend/data/
 agent_roles_cache.json
+sync_jobs.json
+match.json
+backend/match.json
+*.jsonl
+data/*.jsonl
 __pycache__/
 *.py[cod]
 *$py.class
@@ -33,3 +40,9 @@ yarn-error.log*
 # OS files
 .DS_Store
 Thumbs.db
+
+# ML data stays local: raw VCT dumps exceed GitHub's 100 MB file limit and
+# ml/data holds scraped Riot IDs (never public). Models are rebuilt by ml/train_*.py.
+ml/datasets/
+ml/data/
+*.sqlite

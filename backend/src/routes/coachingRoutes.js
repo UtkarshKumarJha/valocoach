@@ -21,6 +21,13 @@ router.get('/:region/:name/:tag', async (req, res) => {
     );
     res.json(result);
   } catch (error) {
+    // First visit: history is being synced in the background; client polls /api/ingest/progress/:riotId
+    if (error.code === 'SYNC_IN_PROGRESS') {
+      return res.status(202).json({ status: 'syncing', progress: error.progress });
+    }
+    if (error.code === 'NO_SUPPORTED_MATCHES') {
+      return res.status(404).json({ error: 'No competitive, unrated or premier matches in your recent history yet. Play a few and search again.' });
+    }
     console.error("Coaching debrief error:", error.message);
     // Generic 503 Service Unavailable (Requirement 8: Never leak Atlas whitelist or DB internals)
     res.status(503).json({ error: "Service temporarily unavailable. Please try again shortly." });

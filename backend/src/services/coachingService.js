@@ -1,7 +1,11 @@
-const axios = require('axios');
-const Player = require('../models/Player');
-const Match = require('../models/Match');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { isSupportedQueue } = require('../config/telemetryConfig');
+const { getRoleForAgent, getRoleForMatch } = require('./agentRoleService');
+const { getPlayerTeam, getSideForRound } = require('./situationDetectors');
+
+// Map names the narrator validator checks for; a name not in the evidence packet means a hallucination
+const ALL_VALORANT_MAPS = ['ascent', 'bind', 'haven', 'split', 'lotus', 'sunset', 'abyss', 'corrode', 'icebox',
+  'breeze', 'fracture', 'pearl', 'summit'];
 
 // In-Memory Cache (TTL: 30 minutes)
 const analysisCache = new Map();
@@ -24,157 +28,11 @@ function setCachedAnalysis(cacheKey, data) {
   });
 }
 
-/**
- * Detects multi-game session fatigue by analyzing match intervals.
- * Groups matches within 90 mins into sessions and tracks Game 1 vs Game 2 vs Game 3+ performance.
- */
-function analyzeSessionFatigue(matches) {
-  if (!matches || matches.length < 4) {
-    return {
-      has_sufficient_data: false,
-      note: "Requires at least 4 matches to calculate session endurance."
-    };
-  }
-
-  // Sort chronological (oldest to newest)
-  const sorted = [...matches].sort((a, b) => new Date(a.playedAt) - new Date(b.playedAt));
-  
-  const game1Stats = [];
-  const game2Stats = [];
-  const game3PlusStats = [];
-
-  let currentGameInSession = 1;
-  let lastMatchTime = null;
-
-  for (const m of sorted) {
-    const matchTime = new Date(m.playedAt).getTime();
-    if (lastMatchTime && (matchTime - lastMatchTime) <= 90 * 60 * 1000) {
-      currentGameInSession += 1;
-    } else {
-      currentGameInSession = 1;
-    }
-    lastMatchTime = matchTime;
-
-    const stats = {
-      acs: m.acs || 0,
-      hs: m.headshotPct || 0,
-      kd: m.deaths > 0 ? (m.kills / m.deaths) : m.kills
-    };
-
-    if (currentGameInSession === 1) game1Stats.push(stats);
-    else if (currentGameInSession === 2) game2Stats.push(stats);
-    else game3PlusStats.push(stats);
-  }
-
-  const avg = (arr, key) => arr.length ? arr.reduce((acc, x) => acc + x[key], 0) / arr.length : 0;
-
-  const g1Acs = Math.round(avg(game1Stats, 'acs'));
-  const g3Acs = Math.round(avg(game3PlusStats, 'acs'));
-  const g1Kd = Number(avg(game1Stats, 'kd').toFixed(2));
-  const g3Kd = Number(avg(game3PlusStats, 'kd').toFixed(2));
-
-  const hasFatigue = game3PlusStats.length >= 2 && g1Acs > 0 && g3Acs < g1Acs;
-  const dropPct = g1Acs > 0 ? Number((((g1Acs - g3Acs) / g1Acs) * 100).toFixed(1)) : 0;
-
-  return {
-    has_sufficient_data: true,
-    total_sessions_tracked: game1Stats.length,
-    game1_avg_acs: g1Acs,
-    game3_plus_avg_acs: g3Acs,
-    game1_avg_kd: g1Kd,
-    game3_plus_avg_kd: g3Kd,
-    fatigue_drop_pct: hasFatigue ? dropPct : 0,
-    fatigue_detected: hasFatigue && dropPct >= 10,
-    recommendation: hasFatigue && dropPct >= 10
-      ? `Performance drops by ~${dropPct}% after Game 2. Cap ranked sessions at 2 consecutive games or take a mandatory 15-minute break.`
-      : "Consistent combat endurance across extended sessions. No significant fatigue decay detected."
-  };
-}
-
-/**
- * Analyzes round economy telemetry to detect Hero Buying and eco traps.
- */
-function analyzeEconomyTraps(matches) {
-  let totalRounds = 0;
-  let heroBuys = 0;
-  let saveWithFullBank = 0;
-  let pistolRounds = 0;
-  let pistolConversions = 0;
-
-  for (const m of matches) {
-    const rounds = m.rounds || [];
-    for (let i = 0; i < rounds.length; i++) {
-      const r = rounds[i];
-      const pStats = r.player_stats || {};
-      const eco = pStats.economy || {};
-      const spent = Number(eco.spent || 0);
-      const remaining = Number(eco.remaining || 0);
-      const loadout = Number(eco.loadout_value || 0);
-
-      totalRounds += 1;
-
-      // Hero Buy: Spent > 3,800 on an eco/save round (loadout < 12,000 for team or spent way above average)
-      if (spent >= 3800 && loadout < 4500 && remaining < 500) {
-        heroBuys += 1;
-      }
-
-      // Saving while sitting on massive surplus
-      if (spent < 1000 && remaining >= 6000) {
-        saveWithFullBank += 1;
-      }
-
-      // Pistol rounds (Round 1 and Round 13)
-      if (i === 0 || i === 12) {
-        pistolRounds += 1;
-        const wonPistol = r.winning_team === pStats.team;
-        const nextRound = rounds[i + 1];
-        if (wonPistol && nextRound) {
-          const nextEco = nextRound.player_stats?.economy || {};
-          const nextSpent = Number(nextEco.spent || 0);
-          if (nextSpent >= 2500) {
-            pistolConversions += 1; // Correctly bought up after pistol win
-          }
-        }
-      }
-    }
-  }
-
-  const disciplineScore = Math.max(0, Math.min(100, Math.round(100 - (heroBuys * 4) - (saveWithFullBank * 2))));
-  let rating = 'S';
-  if (disciplineScore < 70) rating = 'C';
-  else if (disciplineScore < 82) rating = 'B';
-  else if (disciplineScore < 92) rating = 'A';
-
-  return {
-    total_rounds_analyzed: totalRounds,
-    hero_buys_count: heroBuys,
-    hoarding_saves_count: saveWithFullBank,
-    pistol_win_conversions: pistolConversions,
-    discipline_score: disciplineScore,
-    economy_rating: rating,
-    verdict: heroBuys > 3
-      ? "Frequent Hero Buying detected. Buying alone desynchronizes team rifle rounds."
-      : "Solid team economic discipline. Credits managed effectively across half transitions."
-  };
-}
-
-// Agent to Tactical Role Map
-const AGENT_ROLE_MAP = {
-  // Duelists
-  jett: 'Duelist', reyna: 'Duelist', raze: 'Duelist', phoenix: 'Duelist', yoru: 'Duelist', neon: 'Duelist', iso: 'Duelist',
-  // Initiators
-  sova: 'Initiator', breach: 'Initiator', skye: 'Initiator', 'kay/o': 'Initiator', kayo: 'Initiator', fade: 'Initiator', gekko: 'Initiator', tejo: 'Initiator',
-  // Controllers
-  brimstone: 'Controller', omen: 'Controller', viper: 'Controller', astra: 'Controller', harbor: 'Controller', clove: 'Controller',
-  // Sentinels
-  killjoy: 'Sentinel', cypher: 'Sentinel', sage: 'Sentinel', chamber: 'Sentinel', deadlock: 'Sentinel', vyse: 'Sentinel'
-};
-
 function detectPrimaryRole(matches) {
   const roleCounts = { Duelist: 0, Initiator: 0, Controller: 0, Sentinel: 0 };
   for (const m of matches) {
     const agent = (m.agent || '').toLowerCase().trim();
-    const role = AGENT_ROLE_MAP[agent];
+    const role = getRoleForAgent(agent);
     if (role) {
       roleCounts[role] = (roleCounts[role] || 0) + 1;
     }
@@ -207,133 +65,85 @@ function detectPrimaryMap(matches) {
   return topMap;
 }
 
-function detectPlaystyleArchetype(matches, telemetry, primaryRole) {
-  const tempo = telemetry?.tempo || {};
-  const trade = telemetry?.trade_metrics || {};
-  const combat = telemetry?.combat_range || {};
-  const flank = telemetry?.flank_angle || {};
-  
-  const avgDeathTime = tempo.avg_death_time_sec || 35;
-  const attackDryPeekPct = tempo.attack_dry_peeks?.pct || 0;
-  const tradeConvPct = trade.traded_deaths?.pct || 0;
-  const youTradeRatePct = trade.you_trade_teammates?.rate_pct || 0;
-  const untradeablePct = trade.untradeable_deaths?.pct || 0;
-  const avgDist = combat.avg_distance_meters || 16;
-  const flankPct = flank.died_from_behind_pct || 15;
-
-  let title = "Versatile Tactical Operative";
-  let traits = [];
-  let description = "";
-
-  if (primaryRole === 'Duelist') {
-    if (avgDeathTime < 28 || attackDryPeekPct > 25) {
-      title = "Hyper-Aggressive Entry Duelist";
-      traits = ["First-Contact Pioneer", "Aggressive Site Opener", "Space Creator"];
-      description = "Drives team tempo through explosive opening pathfinding and forward site penetration, demanding fast teammate follow-up.";
-    } else if (tradeConvPct >= 30 || youTradeRatePct >= 25) {
-      title = "Calculated Re-Frag Duelist";
-      traits = ["Trade Conversion Specialist", "Disciplined Duel Selection", "Clutch Anchor"];
-      description = "Plays high-percentage second-contact duels, capitalizing on teammate contact to convert rounds with lethal efficiency.";
-    } else {
-      title = "Aggressive Space Maker";
-      traits = ["Site Disruption", "Aggressive Angle Clearing", "Forward Presence"];
-      description = "Creates high-pressure space for teammates by forcing rotations and challenging enemy map control.";
-    }
-  } else if (primaryRole === 'Initiator') {
-    if (youTradeRatePct >= 30 || tradeConvPct >= 30) {
-      title = "Tactical Recon & Trade Enabler";
-      traits = ["Information Architect", "Flash-Assisted Trading", "Utility Synergy"];
-      description = "Dismantles defense setups with precision info-gathering and sets up teammates for unlosable 2-on-1 trades.";
-    } else {
-      title = "Support Utility Orchestrator";
-      traits = ["Area Recon", "Disruption Utility", "Back-Line Coordination"];
-      description = "Focuses on maximizing team utility value and zone clearance from structured back-line positions.";
-    }
-  } else if (primaryRole === 'Controller') {
-    if (avgDeathTime > 38 && flankPct < 20) {
-      title = "Tactical Site Anchor & Smokesmith";
-      traits = ["Pacing Controller", "Zone Denial", "Post-Plant Specialist"];
-      description = "Exceptional round longevity and crosshair discipline, controlling choke points and denying enemy vision throughout entire rounds.";
-    } else {
-      title = "Aggressive Vision Denier";
-      traits = ["Forward Smokes", "Chokepoint Contestation", "Tempo Control"];
-      description = "Deploys rapid vision denial to force favorable close-range gunfights and facilitate dynamic team rotations.";
-    }
-  } else if (primaryRole === 'Sentinel') {
-    if (untradeablePct > 35 || avgDist > 18) {
-      title = "Lurk & Map Control Sentinel";
-      traits = ["Flank Denial", "Passive Map Control", "Timing Infiltration"];
-      description = "Controls macro map pacing by isolating enemy lurkers, watching flanks, and catching rotators off-guard.";
-    } else {
-      title = "Site Lockdown & Trap Architect";
-      traits = ["Chokepoint Stalling", "Crossfire Setup", "Defensive Anchor"];
-      description = "Locks down bombsite access with defensive setups, forcing opponents into high-risk utility burns.";
-    }
-  } else {
-    if (youTradeRatePct > 35) {
-      title = "Coordinated Team-First Trader";
-      traits = ["Revenge Fragger", "High Spatial Proximity", "Pack Mentality"];
-      description = "Excels at immediate revenge trading, punishing enemy duels instantly when teammates make contact.";
-    } else if (untradeablePct > 45) {
-      title = "Isolated Solo Playmaker";
-      traits = ["High Individual Risk", "Solo Duelist", "Flank Exposure"];
-      description = "Takes high-stakes solo duels across the map, frequently finding opening picks but risking untradeable deaths.";
-    } else {
-      title = "Disciplined Tactical Flex";
-      traits = ["Adaptable Positioning", "Balanced Tempo", "Role Fluidity"];
-      description = "Maintains solid tactical fundamentals across multiple map scenarios and team compositions.";
-    }
-  }
-
-  return {
-    title,
-    traits,
-    description,
-    confidence: matches.length >= 10 ? "High (Based on match history telemetry)" : "Preliminary (Sample building)"
-  };
-}
+// One line per habit for "(b) Why it matters": tactical consequence only, no invented numbers.
+const WHY_IT_MATTERS = {
+  TRADES_WELL: 'Fast trades turn a lost duel into an even exchange, which is how man-advantage rounds are kept.',
+  DOESNT_TRADE: 'An untraded death hands the enemy a free man advantage in the fight that decides the site.',
+  STAYS_WITH_TEAM: 'Staying within trade range means every duel you take can be answered by a teammate.',
+  ISOLATED_PLAY: 'Fighting far from your team means your deaths cannot be traded and your utility supports no one.',
+  TAKES_SPACE: 'Being first to contact gives your team the information and space to execute.',
+  LETS_TEAMMATES_ENTER_FIRST: 'When entry falls to others, your team hits with less firepower at the front.',
+  SUPPORTED_ENTRY: 'Entries with a teammate close behind get traded even when the first duel is lost.',
+  UNSUPPORTED_ENTRY: 'Solo entries that die untraded start the round 4v5 with nothing gained.',
+  ANCHORED_WITH_SUPPORT: 'Holding with a teammate in range forces attackers to win two fights instead of one.',
+  SOLO_HOLD_VS_STACK: 'Holding alone against a stack usually trades your life for nothing; falling back keeps a retake alive.',
+  OPENING_DUEL_WIN: 'Winning the opening duel starts the round 5v4, which swings round win odds the most.',
+  OPENING_DUEL_LOSS: 'Losing the opening duel starts the round 4v5.',
+  SYNCED_LURK_KILL: 'Lurk kills timed with the team hit split the defense when it matters.',
+  UNSYNCED_LURK_DEATH: 'A lurk death before the team makes contact removes a player without pulling any rotations.',
+  EARLY_DEATH_NO_ALLY: 'Early deaths with no teammate near cannot be traded and leave the round 4v5 early.'
+};
 
 /**
- * Layer C Narrator Post-Validation:
- * Validates that numbers cited in LLM output do not contradict or invent metrics,
- * and ensures a robust fallback narrative matching the evidence packet.
+ * Layer C Narrator Post-Validation: the debrief may only mention maps and round numbers that exist in the
+ * evidence packet (replay cues + active map). Anything else, an error or a cut-off answer -> deterministic text.
  */
 function postValidateDebrief(debriefText, masterBlob) {
-  if (!debriefText || typeof debriefText !== 'string' || debriefText.startsWith('Gemini LLM Provider Error')) {
-    const archetype = masterBlob.playstyle_archetype?.title || 'Tactical Flex';
-    const habits = masterBlob.habits || [];
-    const flaws = habits.filter(h => h.polarity === 'flaw' && h.tier !== 'occasional' && h.tier !== 'not enough data');
-    const positive = habits.filter(h => h.polarity === 'positive' && h.tier !== 'not enough data');
-    const cues = masterBlob.telemetry_intelligence?.replay_cue_sheet || [];
+  const cues = masterBlob.telemetry_intelligence?.replay_cue_sheet || [];
+  const allowedMaps = new Set([(masterBlob.context?.map || '').toLowerCase(), ...cues.map(c => (c.map || '').toLowerCase())]);
+  const allowedRounds = new Set(cues.map(c => c.round));
 
-    const lines = [
-      `### Tactical Debrief: ${masterBlob.player} (${masterBlob.actual_rank} → ML Target: ${masterBlob.rank_estimate})`,
-      `**Detected Archetype:** ${archetype}`,
-      masterBlob.playstyle_archetype?.description || '',
-      '',
-      '#### Behavioral Habits & Patterns',
-    ];
-
-    if (positive.length > 0) {
-      lines.push('**Observed Strengths:**');
-      positive.slice(0, 2).forEach(p => lines.push(`- **${p.title}:** ${p.narrative}`));
+  let isValid = Boolean(debriefText && typeof debriefText === 'string' && !debriefText.startsWith('Gemini LLM Provider Error'));
+  if (isValid) {
+    const textLower = debriefText.toLowerCase();
+    // Capitalized whole words only: "split the defense" is English, "Split" is the map
+    const badMap = ALL_VALORANT_MAPS.find(m => new RegExp(`\\b${m[0].toUpperCase()}${m.slice(1)}\\b`).test(debriefText) && !allowedMaps.has(m));
+    const badRound = [...textLower.matchAll(/\b(?:round\s*#?|r)(\d{1,2})\b/g)].map(m => Number(m[1])).find(r => !allowedRounds.has(r));
+    if (badMap || badRound != null) {
+      console.warn(`[Narrator Validation] Unknown ${badMap ? `map "${badMap}"` : `round ${badRound}`} in debrief. Using deterministic template.`);
+      isValid = false;
     }
-
-    if (flaws.length > 0) {
-      lines.push('**Tactical Habits to Refine:**');
-      flaws.slice(0, 3).forEach(f => lines.push(`- **${f.title} (${f.tier}):** ${f.narrative}`));
-    } else {
-      lines.push('- No severe negative behavioral patterns detected across your recent matches.');
-    }
-
-    if (cues.length > 0) {
-      lines.push('', '#### Key Tactical Moment (VOD Timestamp)', `- Round ${cues[0].round}, ${cues[0].clock_display || cues[0].time_in_round}: ${cues[0].action_cue}`);
-    }
-
-    return lines.join('\n');
   }
+  return isValid ? debriefText : buildDeterministicDebrief(masterBlob);
+}
 
-  return debriefText;
+/** Task-list format (a)/(b)/(c), built only from computed values. Strengths first, max 3 findings. */
+function buildDeterministicDebrief(masterBlob) {
+  const habits = masterBlob.habits || [];
+  const cues = masterBlob.telemetry_intelligence?.replay_cue_sheet || [];
+  const watchCell = masterBlob.telemetry_intelligence?.watch_item?.cell;
+  const isShown = h => (h.tier === 'pattern' || h.tier === 'strong habit') && h.k > 0;
+  const positives = habits.filter(h => h.polarity === 'positive' && isShown(h));
+  const flaws = habits.filter(h => h.polarity === 'flaw' && isShown(h));
+  const watch = habits.find(h => h.cell === watchCell);
+  const findings = [...positives.slice(0, 2), ...flaws.slice(0, 2), ...(flaws.length ? [] : (watch ? [watch] : []))].slice(0, 3);
+  const cueFor = h => cues.find(c => c.cell === h.cell);
+  const peer = h => (h.peer_baseline?.p0_pct != null ? `, players like you ${h.peer_baseline.p0_pct}%` : '');
+
+  const lines = ['### (a) What the data shows'];
+  if (!findings.length) {
+    lines.push(`- Across ${masterBlob.total_matches_analyzed} matches nothing stands out from players in your own lobbies yet.`);
+  }
+  for (const h of findings) {
+    const c = cueFor(h);
+    const label = h.cell === watchCell ? ' (worth watching, not a pattern yet)' : '';
+    lines.push(`- **${h.title}** as ${h.role} on ${h.side}${label}: ${h.ratePct}% (${h.k} of ${h.n}${peer(h)}).` +
+      (c ? ` See R${c.round}, ${c.map}, ${c.clock_display}.` : ''));
+  }
+  lines.push('', '### (b) Why it matters');
+  for (const h of findings) if (WHY_IT_MATTERS[h.id]) lines.push(`- ${WHY_IT_MATTERS[h.id]}`);
+  if (!findings.length) lines.push('- More matches on one role make differences from your lobby measurable.');
+
+  lines.push('', '### (c) Next session');
+  const focus = flaws[0] || watch;
+  if (focus && focus.peer_baseline?.p0_pct != null) {
+    lines.push(`- Focus: ${focus.title} as ${focus.role} on ${focus.side}. Target: at or below ${focus.peer_baseline.p0_pct}% over your next 10 matches (now ${focus.ratePct}%).`);
+  } else if (positives[0]) {
+    lines.push(`- Keep ${positives[0].title} as ${positives[0].role} on ${positives[0].side} at ${positives[0].ratePct}% or higher over your next 10 matches.`);
+  } else {
+    lines.push('- Play 10 more matches on your main role so the report can compare you with confidence.');
+  }
+  return lines.join('\n');
 }
 
 exports.generateCoachingDebrief = async (region, name, tag, requestedMap = null, requestedRole = null) => {
@@ -346,53 +156,32 @@ exports.generateCoachingDebrief = async (region, name, tag, requestedMap = null,
     return cached;
   }
   
-  const ingestionService = require('./ingestionService');
+  const storeService = require('./storeService');
 
-  // 1. Fetch Player and up to 100 recent Matches (MongoDB with in-memory / fixture fallback)
-  const isMongoLive = require('mongoose').connection.readyState === 1;
-  let player = null;
-  let matches = [];
+  // 1. Fetch Player and up to 100 recent Matches (Store with MongoDB / In-memory resilience)
+  let player = await storeService.getPlayer(riotId);
+  let matches = await storeService.getMatches(riotId, 100);
 
-  if (isMongoLive) {
-    try {
-      player = await Player.findOne({ riotId });
-      if (!player) {
-        console.log(`Player ${riotId} not found in DB. Triggering auto-ingestion...`);
-        await ingestionService.ingestPlayerData(region, name, tag);
-        player = await Player.findOne({ riotId });
-      }
-      if (player) {
-        matches = await Match.find({ player: player._id })
-          .sort({ playedAt: -1 })
-          .limit(100) // Analyze up to 100 recent matches
-          .lean();
-      }
-    } catch (dbErr) {
-      console.warn("MongoDB query issue, falling back to live API / fixture memory:", dbErr.message);
-    }
-  }
-
-  // Fallback: If DB is offline or empty, load verified real match fixtures
+  // Never fetch history inside a request: start (or join) the background sync and tell the client to poll
   if (!matches || matches.length === 0) {
-    console.log(`Using live verified match fixtures for ${riotId}...`);
-    const fs = require('fs');
-    const path = require('path');
-    const fixtureFiles = ['match1.json', 'match2.json', 'match3.json'];
-    matches = fixtureFiles.map(f => {
-      const p = path.join(__dirname, '..', '..', 'tests', 'fixtures', f);
-      return JSON.parse(fs.readFileSync(p, 'utf8'));
-    });
-    player = {
-      riotId,
-      name,
-      tag,
-      currentRank: 'Radiant',
-      currentRR: 85
-    };
+    const { triggerBackgroundSync } = require('./ingestionQueue');
+    const progress = triggerBackgroundSync(region, name, tag);
+    const err = new Error('SYNC_IN_PROGRESS');
+    err.code = 'SYNC_IN_PROGRESS';
+    err.progress = progress;
+    throw err;
   }
 
-  if (matches.length < 1) {
-    throw new Error(`Insufficient data. No matches found for ${riotId}.`);
+  player = player || { riotId, name, tag, currentRank: null };
+
+  // Every downstream card (map list, radar, trends, economy) sees supported 5v5 queues only
+  const skippedMatches = matches.filter(m => !isSupportedQueue(m).supported)
+    .map(m => ({ matchId: m.matchId, reason: isSupportedQueue(m).reason }));
+  matches = matches.filter(m => isSupportedQueue(m).supported);
+  if (matches.length === 0) {
+    const err = new Error('NO_SUPPORTED_MATCHES');
+    err.code = 'NO_SUPPORTED_MATCHES';
+    throw err;
   }
 
   // 2. Auto-Detect Primary Map and Role if not explicitly provided
@@ -433,25 +222,42 @@ exports.generateCoachingDebrief = async (region, name, tag, requestedMap = null,
     trends.note = "Trend Engine requires at least 2 matches to compute delta trends.";
   }
 
-  // 3. Call Python ML Microservice
-  let mlPayload;
-  const mlServiceUrl = process.env.ML_SERVICE_URL || 'http://127.0.0.1:8001';
-  try {
-    const pyResponse = await axios.post(`${mlServiceUrl}/analyze_matches`, {
-      riot_id: riotId,
-      current_rank: player.currentRank,
-      matches: matches,
-      map_name: primaryMap,
-      preferred_role: primaryRole
-    });
-    mlPayload = pyResponse.data;
-  } catch (error) {
-    console.error('Python ML Service Error:', error.message);
-    if (error.response) console.error(error.response.data);
-    throw new Error(`Failed to compute ML Analysis. Ensure Python server is running on ${mlServiceUrl}.`);
+  // 2. Rank Extraction (Requirement 2)
+  // Priority: Most recent competitive match payload (verify tier field name)
+  let verifiedRank = null;
+  let rankSource = 'none';
+
+  // Queue id, not mode name: skirmish_2v2 reports mode "Competitive" but has no rank
+  const compMatches = matches.filter(m => isSupportedQueue(m).queue === 'competitive');
+
+  if (compMatches.length > 0) {
+    const latestComp = compMatches[0];
+    const pRecord = (latestComp.all_players || []).find(p => 
+      (player.puuid && p.puuid === player.puuid) ||
+      (`${p.name}#${p.tag}`.toLowerCase() === riotId)
+    );
+    const tierFound = pRecord?.tier || latestComp.tier;
+    if (tierFound && tierFound !== 'Unranked' && tierFound !== 'Unknown') {
+      verifiedRank = tierFound;
+      rankSource = 'latest_competitive_match';
+    }
   }
 
-  // 4. Spatial Analytics Extraction
+  // Fallback to MMR endpoint only if competitive match had no tier
+  if (!verifiedRank && player.currentRank && player.currentRank !== 'Unranked' && player.currentRank !== 'Unknown') {
+    verifiedRank = player.currentRank;
+    rankSource = 'mmr_endpoint_fallback';
+  }
+
+  if (!verifiedRank) {
+    verifiedRank = 'Rank unavailable';
+    rankSource = 'none';
+  }
+
+  console.log(`[Rank Resolver] Resolved rank for ${riotId}: "${verifiedRank}" (Source: ${rankSource})`);
+  player.currentRank = verifiedRank;
+
+  // 3. Spatial Analytics Extraction
   const availableMaps = [...new Set(matches.map(m => m.map).filter(Boolean))];
   const requestedMapNormalized = (primaryMap || 'ascent').toLowerCase();
   
@@ -464,7 +270,10 @@ exports.generateCoachingDebrief = async (region, name, tag, requestedMap = null,
   const kills = [];
 
   for (const m of spatialMatches) {
+    const team = getPlayerTeam(m, player.puuid, player.riotId);
+    const role = getRoleForMatch(m, player.riotId, player.puuid) || null;
     for (const k of (m.kill_events || [])) {
+      const side = getSideForRound(team, k.round); // adapter kill rounds are 1-based
       if (!k.victim_death_location || k.victim_death_location.x == null || k.victim_death_location.y == null) continue;
       const isVictim = (player.puuid && k.victim_puuid === player.puuid) ||
                        (k.victim_display_name && k.victim_display_name.toLowerCase() === player.riotId.toLowerCase());
@@ -475,19 +284,27 @@ exports.generateCoachingDebrief = async (region, name, tag, requestedMap = null,
         deaths.push({
           x: k.victim_death_location.x,
           y: k.victim_death_location.y,
-          round: k.round || 1,
-          killer: k.killer_display_name || 'Opponent',
-          weapon: k.damage_weapon_name || 'Vandal',
+          round: k.round ?? null,
+          side,
+          role,
+          killer: k.killer_display_name || null,
+          weapon: k.damage_weapon_name || null,
           matchId: m.matchId
         });
       }
-      if (isKiller) {
+      // A kill is plotted where the player stood when firing (their snapshot), not where the enemy fell
+      const shooter = isKiller && (k.player_locations_on_kill || []).find(p =>
+        (player.puuid && p.player_puuid === player.puuid) ||
+        (p.player_display_name && p.player_display_name.toLowerCase() === player.riotId.toLowerCase()));
+      if (shooter?.location) {
         kills.push({
-          x: k.victim_death_location.x,
-          y: k.victim_death_location.y,
-          round: k.round || 1,
-          victim: k.victim_display_name || 'Opponent',
-          weapon: k.damage_weapon_name || 'Vandal',
+          x: shooter.location.x,
+          y: shooter.location.y,
+          round: k.round ?? null,
+          side,
+          role,
+          victim: k.victim_display_name || null,
+          weapon: k.damage_weapon_name || null,
           matchId: m.matchId
         });
       }
@@ -496,7 +313,9 @@ exports.generateCoachingDebrief = async (region, name, tag, requestedMap = null,
 
   const spatialData = {
     active_map: activeMapName,
-    available_maps: availableMaps.length > 0 ? availableMaps : ['Ascent', 'Bind', 'Haven', 'Split', 'Sunset', 'Lotus'],
+    requested_map: primaryMap || null,
+    requested_map_has_data: targetMapMatches.length > 0,
+    available_maps: availableMaps,
     deaths,
     kills,
     map_stats: {
@@ -508,8 +327,12 @@ exports.generateCoachingDebrief = async (region, name, tag, requestedMap = null,
   };
 
   // 5. Macro-Pattern Analytics (Session Fatigue & Economy Discipline & Telemetry Intelligence)
-  const sessionAnalytics = analyzeSessionFatigue(matches);
-  const economyAnalytics = analyzeEconomyTraps(matches);
+  const { analyzeEconomy } = require('./economyService');
+  const { computeMatchTrends, evaluateSessionFatigue } = require('./trendsService');
+
+  const sessionAnalytics = evaluateSessionFatigue(matches, riotId, player.puuid);
+  const economyAnalytics = analyzeEconomy(matches, riotId, player.puuid);
+
   const telemetryIntelligenceService = require('./telemetryIntelligenceService');
   const telemetryIntelligence = telemetryIntelligenceService.analyzeTelemetry(
     matches, 
@@ -518,27 +341,50 @@ exports.generateCoachingDebrief = async (region, name, tag, requestedMap = null,
     player.currentRank
   );
 
-  // 6. Auto-Classify Playstyle Archetype from Telemetry & Behavior (Requirement 0b)
-  const playstyleArchetype = (telemetryIntelligence && telemetryIntelligence.playstyle_archetype && telemetryIntelligence.playstyle_archetype.title !== 'Generalist')
-    ? telemetryIntelligence.playstyle_archetype
-    : detectPlaystyleArchetype(matches, telemetryIntelligence, primaryRole);
+  // Habit trend follows the habit the report leads with: first shown flaw, else the watch item, else first strength
+  const shownHabits = (telemetryIntelligence?.habits || []).filter(h => (h.tier === 'pattern' || h.tier === 'strong habit') && h.k > 0);
+  const keyCell = shownHabits.find(h => h.polarity === 'flaw')?.cell || telemetryIntelligence?.watch_item?.cell || shownHabits[0]?.cell || null;
+  const trendsAnalytics = computeMatchTrends(matches, riotId, player.puuid, keyCell);
 
-  // 7. Assemble the Master JSON to send to Gemini
+  // Matches per role (agent played in each match), for the header
+  const roleMix = {};
+  for (const m of matches) {
+    const r = getRoleForMatch(m, riotId, player.puuid) || 'Unknown';
+    roleMix[r] = (roleMix[r] || 0) + 1;
+  }
+
+  // One goal for the next session: first shown flaw, else the "worth watching" item, else keep the top strength
+  const watchHabit = (telemetryIntelligence?.habits || []).find(h => h.cell === telemetryIntelligence?.watch_item?.cell);
+  const focusHabit = shownHabits.find(h => h.polarity === 'flaw') || watchHabit;
+  const keepHabit = shownHabits.find(h => h.polarity === 'positive');
+  const nextFocus = focusHabit && focusHabit.peer_baseline?.p0_pct != null
+    ? { type: 'reduce', cell: focusHabit.cell, title: focusHabit.title, role: focusHabit.role, side: focusHabit.side,
+        current_pct: focusHabit.ratePct, target_pct: focusHabit.peer_baseline.p0_pct, proven: focusHabit !== watchHabit }
+    : (keepHabit ? { type: 'keep', cell: keepHabit.cell, title: keepHabit.title, role: keepHabit.role, side: keepHabit.side,
+        current_pct: keepHabit.ratePct, target_pct: keepHabit.ratePct, proven: true } : null);
+
+  // Filter habits for dominant role
+  const rawHabits = telemetryIntelligence?.habits || [];
+  const roleFilteredHabits = rawHabits.filter(h => h.tier !== 'not applicable for role');
+
+
+  // 7. Assemble the Master JSON (Single honest source of truth)
   const masterBlob = {
-    player: mlPayload.player,
-    rank_estimate: mlPayload.rank_estimate,
-    actual_rank: mlPayload.actual_rank,
-    rank_gap_value: mlPayload.rank_gap_value,
-    weakness_tags: mlPayload.weakness_tags,
-    agent_recommendations: mlPayload.agent_recommendations,
-    trends: trends,
+    player: riotId,
+    total_matches_analyzed: matches.length,
+    total_matches_skipped: skippedMatches.length,
+    skipped_matches: skippedMatches,
+    actual_rank: verifiedRank,
+    rank_source: rankSource,
+    trends: trendsAnalytics,
     spatial_data: spatialData,
-    sequence_analytics: mlPayload.sequence_analytics,
     session_analytics: sessionAnalytics,
     economy_analytics: economyAnalytics,
+    // replay_cue_sheet inside is already role-aware per match (habit engine + isFlawForRole)
     telemetry_intelligence: telemetryIntelligence,
-    habits: telemetryIntelligence?.habits || [],
-    playstyle_archetype: playstyleArchetype,
+    habits: roleFilteredHabits,
+    role_mix: roleMix,
+    next_focus: nextFocus,
     context: {
       map: primaryMap,
       role: primaryRole,
@@ -549,53 +395,67 @@ exports.generateCoachingDebrief = async (region, name, tag, requestedMap = null,
   };
 
   // 8. Gemini LLM Orchestration
-  let debriefText = "Gemini integration failed. Please check the API key.";
+  let debriefText = "Tactical debrief generated from verified telemetry.";
   try {
     const key = process.env.GEMINI_API_KEY || process.env.GEMINI_KEY;
     if (key) {
       const genAI = new GoogleGenerativeAI(key);
       const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-      const model = genAI.getGenerativeModel({ model: modelName });
+      const model = genAI.getGenerativeModel({ 
+        model: modelName,
+        generationConfig: { maxOutputTokens: 1024, temperature: 0.2, thinkingConfig: { thinkingBudget: 0 } } // 2.5 Flash counts thinking against the cap
+      });
 
-      // Structured Prompting with Evidence Packet (Layer C Narrator)
+      // Strict evidence packet without fake impacts or persona intro
       const prompt = `
-        You are an elite, Immortal-ranking Valorant coach and tactical narrator.
+        You are a high-ELO tactical coach debriefing a player named ${masterBlob.player} on map: ${masterBlob.context.map} as role: ${masterBlob.context.role} (Rank: ${masterBlob.actual_rank}).
+        Match window: Based on ${masterBlob.total_matches_analyzed} matches.
         
-        Analyze the following pre-graded ML signals and Telemetry Intelligence for a player named ${masterBlob.player} on map: ${masterBlob.context.map} as role: ${masterBlob.context.role}.
-        Auto-Detected Playstyle Archetype: "${masterBlob.playstyle_archetype.title}" (${masterBlob.playstyle_archetype.traits.join(', ')})
-        Archetype Behavior: ${masterBlob.playstyle_archetype.description}
-        Rank Cohort: ${masterBlob.telemetry_intelligence?.rank_cohort_context?.rank || masterBlob.actual_rank} (Band: ${masterBlob.telemetry_intelligence?.rank_cohort_context?.tier_band || 'Provisional'}).
-        
-        CRITICAL CONSTRAINT: Gemini may ONLY polish and structure the narrative. You must NOT invent new claims, alter metrics, or hallucinate stats. Every number must match the evidence packet exactly.
+        CRITICAL RULES:
+        - NO persona intro ("I've seen countless agents...").
+        - Blunt, practical tone. Strengths first. Maximum ~200 words.
+        - Wording must match tier: occasional habits must NEVER be described with "frequently" or "often".
+        - Do not cite uncalibrated numeric impacts.
+        - Strict 3-section format:
+          ### (a) What the Data Shows
+          Up to 3 findings, each citing concrete evidence numbers and one specific round replay cue [R#, map, elapsed/on-clock time].
+          ### (b) Why It Matters
+          Tactical impact of these specific tendencies for a ${masterBlob.context.role} on ${masterBlob.context.map}.
+          ### (c) Next Session
+          Restate next_focus from the packet exactly: its habit, role, side, current % and target %, over the next 10 matches.
+          If next_focus.proven is false, say it is not a proven habit yet. Never invent any other metric or count.
         
         Evidence Packet:
         ${JSON.stringify({
           player: masterBlob.player,
-          rank_estimate: masterBlob.rank_estimate,
           actual_rank: masterBlob.actual_rank,
-          playstyle_archetype: masterBlob.playstyle_archetype.title,
-          habits: masterBlob.habits?.slice(0, 6),
-          impact_flaws: masterBlob.telemetry_intelligence?.impact_flaws,
-          trade_metrics: masterBlob.telemetry_intelligence?.trade_metrics,
-          flank_angle: masterBlob.telemetry_intelligence?.flank_angle,
-          tempo_signature: masterBlob.telemetry_intelligence?.tempo,
-          replay_cues: masterBlob.telemetry_intelligence?.replay_cue_sheet,
-          session_fatigue: masterBlob.session_analytics?.fatigue_detected ? masterBlob.session_analytics.recommendation : 'Endurance solid',
-          economy_discipline: `${masterBlob.economy_analytics?.economy_rating} grade (${masterBlob.economy_analytics?.hero_buys_count} hero buys)`,
+          habits: (masterBlob.habits || []).filter(h => h.tier === 'pattern' || h.tier === 'strong habit').slice(0, 6).map(h => ({
+            id: h.id,
+            title: h.title,
+            role: h.role,
+            side: h.side,
+            tier: h.tier,
+            ratePct: h.ratePct,
+            k: h.k,
+            n: h.n,
+            peer_p0: h.peer_baseline?.p0_pct
+          })),
+          trade_metrics: masterBlob.telemetry_intelligence?.trade_metrics?.you_trade_teammates,
+          replay_cues: (masterBlob.telemetry_intelligence?.replay_cue_sheet || []).slice(0, 6).map(c => ({
+            habit: c.habit, role: c.role, side: c.side, map: c.map, round: c.round, clock: c.clock_display
+          })),
+          next_focus: masterBlob.next_focus,
+          session_fatigue: masterBlob.session_analytics?.recommendation,
           context: masterBlob.context
         }, null, 2)}
-        
-        Structure your debrief as follows:
-        1. Vibe Check & Playstyle Archetype: Compare their actual rank (${masterBlob.actual_rank}) to their ML estimated form (${masterBlob.rank_estimate}), and address them directly under their auto-detected archetype: "${masterBlob.playstyle_archetype.title}".
-        2. Habits & Tendencies: Present observed strengths alongside flaws using the soft wording from the habit evidence (e.g., "You've been observed to...").
-        3. Replay Cue VOD Timestamp: Cite 1 specific round from the replay cues with clock time (e.g., "Round 8, 0:19 elapsed (1:21 on-clock)") and explain the exact positional mistake (untradeable death, flank blindspot, dry peek).
-        4. Tactical Role Rule: One blunt rule for ${masterBlob.context.role} on ${masterBlob.context.map} regarding spacing, trading, or economy.
-        
-        Keep it conversational, punchy, format with simple markdown, no walls of text. Be brutally honest but encouraging.
       `;
 
       const result = await model.generateContent(prompt);
-      debriefText = result.response.text();
+      // A cut-off answer is worse than the deterministic template: postValidate falls back on this marker
+      const finish = result.response.candidates?.[0]?.finishReason;
+      debriefText = finish && finish !== 'STOP'
+        ? `Gemini LLM Provider Error: incomplete response (${finish})`
+        : result.response.text();
     }
   } catch (error) {
     console.error("Gemini Error:", error);
@@ -617,7 +477,7 @@ exports.generateCoachingDebrief = async (region, name, tag, requestedMap = null,
 };
 
 /**
- * Interactive Coach Chat with Gemini
+ * Interactive Coach Chat with Gemini & Function Calling Tools (Requirement 7)
  */
 exports.chatWithCoach = async ({ riotId, messages, contextData }) => {
   const key = process.env.GEMINI_API_KEY || process.env.GEMINI_KEY;
@@ -627,34 +487,152 @@ exports.chatWithCoach = async ({ riotId, messages, contextData }) => {
 
   const genAI = new GoogleGenerativeAI(key);
   const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-  const model = genAI.getGenerativeModel({ model: modelName });
 
-  const ti = contextData?.telemetry_intelligence;
+  const tools = [
+    {
+      functionDeclarations: [
+        {
+          name: 'get_habits',
+          description: "Returns observed behavioral habits, rates, sample sizes (k/n), and peer comparisons for the player's primary role and side.",
+          parameters: {
+            type: 'OBJECT',
+            properties: {}
+          }
+        },
+        {
+          name: 'get_round',
+          description: "Returns replay moments, kills and deaths for one round of one match. matchId comes from get_habits cues.",
+          parameters: {
+            type: 'OBJECT',
+            properties: {
+              matchId: { type: 'STRING', description: 'Match id from a replay cue' },
+              round: { type: 'NUMBER', description: 'Round number (e.g. 1-26)' }
+            },
+            required: ['matchId', 'round']
+          }
+        },
+        {
+          name: 'get_deaths',
+          description: "Returns fatal engagement locations, distances, and circumstances filtered by map, side, and role.",
+          parameters: {
+            type: 'OBJECT',
+            properties: {
+              map: { type: 'STRING', description: 'Map name, e.g. Ascent, Abyss' },
+              side: { type: 'STRING', description: 'Side: attack or defense' },
+              role: { type: 'STRING', description: 'Role: Duelist, Sentinel, Initiator, Controller' }
+            }
+          }
+        }
+      ]
+    }
+  ];
+
+  const model = genAI.getGenerativeModel({ 
+    model: modelName,
+    tools,
+    generationConfig: { maxOutputTokens: 1024, temperature: 0.2, thinkingConfig: { thinkingBudget: 0 } } // 2.5 Flash counts thinking against the cap
+  });
+
+  const chat = model.startChat({
+    history: []
+  });
+
   const systemContext = `
-    You are ValoCoach, an Immortal 3 / Radiant Valorant coach speaking directly with player: ${riotId || 'Student'}.
-    You have analyzed their last 20 matches. Here is their statistical and tactical evidence packet:
-    - Current Rank: ${contextData?.actual_rank || 'Unknown'} (ML Predicted Form: ${contextData?.rank_estimate || 'Unknown'})
-    - Cohort Tactical Focus: ${ti?.rank_cohort_context?.tactical_focus || 'Fundamentals'}
-    - Key Flaws with Round Impact: ${(ti?.impact_flaws || []).map(f => `${f.flaw} (${f.your_rate} vs benchmark ${f.cohort_benchmark}, worth ${f.round_impact})`).join('; ') || 'None flagged'}
-    - Trade Efficiency: Untradeable Deaths ${Math.round((ti?.trade_metrics?.untradeable_rate || 0) * 100)}%, Traded Deaths ${Math.round((ti?.trade_metrics?.trade_conversion_rate || 0) * 100)}% (Rating: ${ti?.trade_metrics?.efficiency_rating || 'N/A'})
-    - Flank Blindspots: ${Math.round((ti?.flank_angle?.died_from_behind_rate || 0) * 100)}% deaths occurred facing away from killer
-    - Dry-Peek Opening Deaths: ${Math.round((ti?.tempo?.dry_peek_rate || 0) * 100)}% (<22s into round)
-    - Spatial Predictability: ${ti?.spatial_entropy?.predictability_score || 'Balanced'} (Entropy: ${ti?.spatial_entropy?.shannon_entropy || '0.8'})
-    - Replay Cue Highlights: ${(ti?.replay_cue_sheet || []).map(c => `R${c.round} (${c.timestamp}) on ${c.map}: ${c.flaw} (${c.win_prob_impact})`).join('; ') || 'None'}
-    - Selected Map: ${contextData?.context?.map || 'Ascent'}, Role: ${contextData?.context?.role || 'Duelist'} (Map KD: ${contextData?.spatial_data?.map_stats?.kd_ratio || 'N/A'})
-    - Session Endurance: ${contextData?.session_analytics?.recommendation || 'Solid'}
-    - Economy Discipline: Grade ${contextData?.economy_analytics?.economy_rating || 'B'} (${contextData?.economy_analytics?.hero_buys_count || 0} Hero Buys)
+    You are ValoCoach, a tactical coach speaking directly with player: ${riotId || 'Student'}.
+    Rank: ${contextData?.actual_rank || 'Rank unavailable'}. Role: ${contextData?.context?.role || 'Flex'}. Map: ${contextData?.context?.map || 'unknown'}.
     
-    Answer the student's question directly, concisely, and with high-ELO tactical depth.
-    CITE specific numbers or round timestamps from their evidence packet when answering.
-    Use blunt, practical FPS terminology (crosshair placement, dead-zoning, clearing angles, trading, utility combos, buy discipline).
-    Keep responses punchy (2-4 short paragraphs max).
+    STRICT RULES (Requirement 7):
+    - Answer ONLY from tool results (get_habits, get_round, get_deaths) or verified facts in the conversation.
+    - CITE specific rounds and timestamps [e.g. Round 4 at 0:24 elapsed].
+    - Occasional habits must NEVER be described with "frequently" or "often".
+    - Do NOT cite uncalibrated numeric impacts (e.g. do not say "-24%" or "+0.2 rounds/match").
+    - If you do not have data on a particular question, say: "I don't have data on that."
+    - Keep answers blunt, tactical, and under ~150 words.
   `;
 
-  // Build dialogue for Gemini
+  // Build dialogue
   const conversationHistory = (messages || []).map(m => `${m.role === 'user' ? 'Student' : 'Coach'}: ${m.content}`).join('\n');
-  const fullPrompt = `${systemContext}\n\nRecent Conversation:\n${conversationHistory}\n\nCoach:`;
+  const initialPrompt = `${systemContext}\n\nConversation:\n${conversationHistory}\n\nCoach:`;
 
-  const result = await model.generateContent(fullPrompt);
-  return { reply: result.response.text() };
+  try {
+    let result = await chat.sendMessage(initialPrompt);
+    const functionCalls = result.response.functionCalls();
+
+    if (functionCalls && functionCalls.length > 0) {
+      const call = functionCalls[0];
+      let toolData = {};
+
+      if (call.name === 'get_habits') {
+        const cues = contextData?.telemetry_intelligence?.replay_cue_sheet || [];
+        toolData = {
+          habits: (contextData?.habits || []).filter(h => h.tier !== 'not applicable for role' && h.n > 0).map(h => ({
+            title: h.title,
+            role: h.role,
+            side: h.side,
+            tier: h.tier,
+            rate: `${h.k}/${h.n} (${h.ratePct}%)`,
+            peer_baseline: h.peer_baseline?.p0_pct != null ? `${h.peer_baseline.p0_pct}%` : 'no baseline',
+            cues: cues.filter(c => c.cell === h.cell).map(c => ({ matchId: c.matchId, round: c.round, map: c.map, clock: c.clock_display }))
+          }))
+        };
+      } else if (call.name === 'get_round') {
+        const roundNum = Number(call.args?.round);
+        const matchId = String(call.args?.matchId || '');
+        const inRound = x => x.round === roundNum && x.matchId === matchId;
+        const cues = (contextData?.telemetry_intelligence?.replay_cue_sheet || []).filter(inRound);
+        const kills = (contextData?.spatial_data?.kills || []).filter(inRound);
+        const deaths = (contextData?.spatial_data?.deaths || []).filter(inRound);
+        toolData = cues.length || kills.length || deaths.length
+          ? { matchId, round: roundNum, cues, kills, deaths }
+          : { error: 'No data for that match and round.' };
+      } else if (call.name === 'get_deaths') {
+        const { map, side, role } = call.args || {};
+        const sd = contextData?.spatial_data || {};
+        const eq = (a, b) => !b || String(a || '').toLowerCase() === String(b).toLowerCase();
+        // Positions are only loaded for the active map; any other map has no data here
+        const deaths = eq(sd.active_map, map) ? (sd.deaths || []).filter(d => eq(d.side, side) && eq(d.role, role)) : [];
+        toolData = { map: sd.active_map, total: deaths.length, deaths: deaths.slice(0, 15) };
+      }
+
+      // Send tool response to model
+      const followUp = await chat.sendMessage([
+        {
+          functionResponse: {
+            name: call.name,
+            response: toolData
+          }
+        }
+      ]);
+      return { reply: followUp.response.text() };
+    }
+
+    return { reply: result.response.text() };
+  } catch (err) {
+    console.warn("[chatWithCoach] Tool call or Gemini error, using grounded fallback:", err.message);
+    // Grounded fallback
+    const latestUserMsg = (messages[messages.length - 1]?.content || '').toLowerCase();
+    const cues = contextData?.telemetry_intelligence?.replay_cue_sheet || [];
+    const habits = contextData?.habits || [];
+
+    if (latestUserMsg.includes('habit') || latestUserMsg.includes('playstyle')) {
+      const topHabit = habits.find(h => (h.tier === 'pattern' || h.tier === 'strong habit') && h.k > 0);
+      return { 
+        reply: topHabit 
+          ? `Your clearest habit is ${topHabit.title} as ${topHabit.role} on ${topHabit.side} (${topHabit.tier}): ${topHabit.k} of ${topHabit.n} (${topHabit.ratePct}%). ${topHabit.narrative}`
+          : "I don't have data on that."
+      };
+    }
+    if (latestUserMsg.includes('round') || latestUserMsg.includes('cue')) {
+      const topCue = cues[0];
+      return {
+        reply: topCue
+          ? `Round ${topCue.round} on ${topCue.map} (${topCue.clock_display}): ${topCue.habit_title}, as ${topCue.role} on ${topCue.side}.`
+          : "I don't have data on that."
+      };
+    }
+    return {
+      reply: "I don't have data on that."
+    };
+  }
 };
+exports._test = { postValidateDebrief, buildDeterministicDebrief };

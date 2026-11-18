@@ -1,0 +1,11 @@
+pandas
+scikit-learn
+xgboost
+pymongo
+python-dotenv
+joblib
+numpy
+certifi
+fastapi
+uvicorn
+onnxruntime

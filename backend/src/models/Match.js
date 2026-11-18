@@ -89,7 +89,10 @@ const matchSchema = new mongoose.Schema({
     }]
   }]
 }, {
-  timestamps: true
+  timestamps: true,
+  // Keep the full normalized v4 match (all_players, PUUIDs, plant events, queue...): fields the schema
+  // doesn't list were silently dropped before, leaving matches with no peers, roles or plant times.
+  strict: false
 });
 matchSchema.index({ matchId: 1, player: 1 }, { unique: true });
 

@@ -12,8 +12,9 @@ const getHeaders = () => {
 
 exports.fetchPlayerMmr = async (region, name, tag) => {
   try {
-    const response = await axios.get(`${BASE_URL}/valorant/v2/mmr/${region}/${name}/${tag}`, {
-      headers: getHeaders()
+    const response = await axios.get(`${BASE_URL}/valorant/v1/mmr/${encodeURIComponent(region)}/${encodeURIComponent(name)}/${encodeURIComponent(tag)}`, {
+      headers: getHeaders(),
+      timeout: 15000
     });
     return response.data;
   } catch (error) {
@@ -22,14 +23,35 @@ exports.fetchPlayerMmr = async (region, name, tag) => {
   }
 };
 
-exports.fetchPlayerMatches = async (region, name, tag, size = 10) => {
+exports.fetchPlayerMatchesV4 = async (region, name, tag, start = 0, size = 10, platform = 'pc') => {
   try {
-    const response = await axios.get(`${BASE_URL}/valorant/v3/matches/${region}/${name}/${tag}?mode=competitive&size=${size}`, {
-      headers: getHeaders()
+    const url = `${BASE_URL}/valorant/v4/matches/${encodeURIComponent(region)}/${platform}/${encodeURIComponent(name)}/${encodeURIComponent(tag)}?size=${size}&start=${start}`;
+    const response = await axios.get(url, {
+      headers: getHeaders(),
+      timeout: 20000
     });
     return response.data;
   } catch (error) {
-    console.error(`Error fetching matches for ${name}#${tag}:`, error.message);
+    console.error(`Error fetching v4 matches for ${name}#${tag} (start: ${start}):`, error.message);
     throw error;
   }
+};
+
+exports.fetchPlayerMatchesByPuuidV4 = async (region, puuid, start = 0, size = 10, platform = 'pc') => {
+  try {
+    const url = `${BASE_URL}/valorant/v4/by-puuid/matches/${encodeURIComponent(region)}/${platform}/${encodeURIComponent(puuid)}?size=${size}&start=${start}`;
+    const response = await axios.get(url, {
+      headers: getHeaders(),
+      timeout: 20000
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching v4 matches by puuid for ${puuid} (start: ${start}):`, error.message);
+    throw error;
+  }
+};
+
+// Backwards compatibility alias
+exports.fetchPlayerMatches = async (region, name, tag, size = 10) => {
+  return exports.fetchPlayerMatchesV4(region, name, tag, 0, size);
 };

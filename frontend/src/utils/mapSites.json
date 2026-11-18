@@ -1,0 +1,199 @@
+{
+  "ascent": [
+    {
+      "letter": "A",
+      "name": "Site",
+      "x": 6153.585,
+      "y": -6626.2114
+    },
+    {
+      "letter": "B",
+      "name": "Site",
+      "x": -2344.065,
+      "y": -7548.511
+    }
+  ],
+  "split": [
+    {
+      "letter": "A",
+      "name": "Site",
+      "x": 6588.6597,
+      "y": -6761.131
+    },
+    {
+      "letter": "B",
+      "name": "Site",
+      "x": -2167.2456,
+      "y": -6264.7715
+    }
+  ],
+  "fracture": [
+    {
+      "letter": "B",
+      "name": "Site",
+      "x": 8178,
+      "y": -5942
+    },
+    {
+      "letter": "A",
+      "name": "Site",
+      "x": 8125.7627,
+      "y": 3373.7861
+    }
+  ],
+  "bind": [
+    {
+      "letter": "A",
+      "name": "Site",
+      "x": 10747.902,
+      "y": 2664.4436
+    },
+    {
+      "letter": "B",
+      "name": "Site",
+      "x": 11108.108,
+      "y": -4831.4585
+    }
+  ],
+  "breeze": [
+    {
+      "letter": "B",
+      "name": "Site",
+      "x": 6450,
+      "y": -5650
+    },
+    {
+      "letter": "A",
+      "name": "Site",
+      "x": 4825,
+      "y": 6325
+    }
+  ],
+  "district": [],
+  "kasbah": [],
+  "drift": [],
+  "abyss": [
+    {
+      "letter": "A",
+      "name": "Site",
+      "x": 4300,
+      "y": -200
+    },
+    {
+      "letter": "B",
+      "name": "Site",
+      "x": -4425,
+      "y": -1175
+    }
+  ],
+  "lotus": [
+    {
+      "letter": "A",
+      "name": "Site",
+      "x": 7735.5396,
+      "y": 5557.309
+    },
+    {
+      "letter": "B",
+      "name": "Site",
+      "x": 6368.0327,
+      "y": 668.18317
+    },
+    {
+      "letter": "C",
+      "name": "Site",
+      "x": 6676.6636,
+      "y": -4265.876
+    }
+  ],
+  "sunset": [
+    {
+      "letter": "B",
+      "name": "Site",
+      "x": -600,
+      "y": -5850
+    },
+    {
+      "letter": "A",
+      "name": "Site",
+      "x": 1000,
+      "y": 3200
+    }
+  ],
+  "pearl": [
+    {
+      "letter": "A",
+      "name": "Site",
+      "x": 6613.846,
+      "y": 5569.5254
+    },
+    {
+      "letter": "B",
+      "name": "Site",
+      "x": 5800,
+      "y": -2850
+    }
+  ],
+  "summit": [
+    {
+      "letter": "A",
+      "name": "Site",
+      "x": 7675,
+      "y": 11600
+    },
+    {
+      "letter": "B",
+      "name": "Site",
+      "x": 8550,
+      "y": 1375.0001
+    }
+  ],
+  "icebox": [
+    {
+      "letter": "A",
+      "name": "Site",
+      "x": -6400,
+      "y": 3200
+    },
+    {
+      "letter": "B",
+      "name": "Site",
+      "x": 1725,
+      "y": 2575
+    }
+  ],
+  "corrode": [
+    {
+      "letter": "A",
+      "name": "Site",
+      "x": 3458.2793,
+      "y": -1824.5004
+    },
+    {
+      "letter": "B",
+      "name": "Site",
+      "x": -2716.7234,
+      "y": -1174.5138
+    }
+  ],
+  "haven": [
+    {
+      "letter": "A",
+      "name": "Site",
+      "x": 6309.3076,
+      "y": -9225.703
+    },
+    {
+      "letter": "B",
+      "name": "Site",
+      "x": 1884.706,
+      "y": -9231.335
+    },
+    {
+      "letter": "C",
+      "name": "Site",
+      "x": -2378.1328,
+      "y": -9010.557
+    }
+  ]
+}

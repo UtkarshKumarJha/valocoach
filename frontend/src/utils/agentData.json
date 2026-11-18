@@ -1,0 +1,1170 @@
+{
+  "gekko": {
+    "id": "e370fa57-4757-3604-3648-499e1f642d3f",
+    "name": "Gekko",
+    "icon": "https://media.valorant-api.com/agents/e370fa57-4757-3604-3648-499e1f642d3f/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/e370fa57-4757-3604-3648-499e1f642d3f/fullportrait.png",
+    "role": "Initiator",
+    "abilities": [
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Wingman",
+        "icon": "https://media.valorant-api.com/agents/e370fa57-4757-3604-3648-499e1f642d3f/abilities/ability1/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Wingman</>. FIRE to send it forward. <debuffred>Chases</> the first enemy it sees, <debuffred>concussing</> on impact. ALT FIRE to have <whitebold>Wingman</> plant or defuse at a targeted bomb site.\r\n\r\nReverts to a <whitebold>Globule</>."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Dizzy",
+        "icon": "https://media.valorant-api.com/agents/e370fa57-4757-3604-3648-499e1f642d3f/abilities/ability2/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Dizzy</>. FIRE to throw. Fires plasma at enemies in line of sight, <debuffred>blinding</> them.\r\n\r\nReverts to a <whitebold>Globule</>."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Mosh Pit",
+        "icon": "https://media.valorant-api.com/agents/e370fa57-4757-3604-3648-499e1f642d3f/abilities/grenade/displayicon.png",
+        "description": "EQUIP <whitebold>Mosh</>. FIRE to throw. ALT FIRE to lob. On landing, create a zone that deals low <debuffred>damage</> over time before exploding, dealing high <debuffred>damage</> to all players.\r\n\r\nReverts to a <whitebold>Globule</>."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Thrash",
+        "icon": "https://media.valorant-api.com/agents/e370fa57-4757-3604-3648-499e1f642d3f/abilities/ultimate/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Thrash</>. FIRE to take control. FIRE again to lunge and explode, <debuffred>detaining</> all players. FIRE while lunging to explode early.\r\n\r\nReverts to a <whitebold>Globule</> only once."
+      }
+    ]
+  },
+  "fade": {
+    "id": "dade69b4-4f5a-8528-247b-219e5a1facd6",
+    "name": "Fade",
+    "icon": "https://media.valorant-api.com/agents/dade69b4-4f5a-8528-247b-219e5a1facd6/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/dade69b4-4f5a-8528-247b-219e5a1facd6/fullportrait.png",
+    "role": "Initiator",
+    "abilities": [
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Seize",
+        "icon": "https://media.valorant-api.com/agents/dade69b4-4f5a-8528-247b-219e5a1facd6/abilities/ability1/displayicon.png",
+        "description": "EQUIP <whitebold>Seize</>. FIRE to throw. REACTIVATE to drop early. On landing, <debuffred>deafen</>, <debuffred>decay</>, and <debuffred>tether</> enemies."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Haunt",
+        "icon": "https://media.valorant-api.com/agents/dade69b4-4f5a-8528-247b-219e5a1facd6/abilities/ability2/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Haunt</>. FIRE to throw. REACTIVATE to drop early. On landing, <debuffred>mark</> and <debuffred>reveal</> enemies in range and line of sight."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Prowler",
+        "icon": "https://media.valorant-api.com/agents/dade69b4-4f5a-8528-247b-219e5a1facd6/abilities/grenade/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Prowler</>. FIRE to send it forward. HOLD FIRE to steer towards your crosshair. <debuffred>Chases</> the first enemy or <whitebold>Terror Trail</> it sees, <debuffred>nearsighting</> on impact."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Nightfall",
+        "icon": "https://media.valorant-api.com/agents/dade69b4-4f5a-8528-247b-219e5a1facd6/abilities/ultimate/displayicon.png",
+        "description": "EQUIP <whitebold>Nightfall</>. FIRE to send forward a wave that <debuffred>deafens</>, <debuffred>decays</>, and <debuffred>marks</> enemies."
+      }
+    ]
+  },
+  "breach": {
+    "id": "5f8d3a7f-467b-97f3-062c-13acf203c006",
+    "name": "Breach",
+    "icon": "https://media.valorant-api.com/agents/5f8d3a7f-467b-97f3-062c-13acf203c006/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/5f8d3a7f-467b-97f3-062c-13acf203c006/fullportrait.png",
+    "role": "Initiator",
+    "abilities": [
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Flashpoint",
+        "icon": "https://media.valorant-api.com/agents/5f8d3a7f-467b-97f3-062c-13acf203c006/abilities/ability1/displayicon.png",
+        "description": "EQUIP a <whitebold>Flashpoint</>. FIRE to send it through a wall, exploding to <debuffred>flash</> all players looking at it."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Fault Line",
+        "icon": "https://media.valorant-api.com/agents/5f8d3a7f-467b-97f3-062c-13acf203c006/abilities/ability2/displayicon.png",
+        "description": "EQUIP <whitebold>Fault Line</>. HOLD FIRE to increase distance. RELEASE to detonate a zone that <debuffred>concusses</> all players."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Aftershock",
+        "icon": "https://media.valorant-api.com/agents/5f8d3a7f-467b-97f3-062c-13acf203c006/abilities/grenade/displayicon.png",
+        "description": "EQUIP <whitebold>Aftershock</>. FIRE to send a zone through a wall, exploding to repeatedly deal <debuffred>damage</> to all players."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Rolling Thunder",
+        "icon": "https://media.valorant-api.com/agents/5f8d3a7f-467b-97f3-062c-13acf203c006/abilities/ultimate/displayicon.png",
+        "description": "EQUIP <whitebold>Rolling Thunder</>. FIRE to send forward a wave that <debuffred>concusses</> and <debuffred>knocks up</> all players."
+      }
+    ]
+  },
+  "deadlock": {
+    "id": "cc8b64c8-4b25-4ff9-6e7f-37b4da43d235",
+    "name": "Deadlock",
+    "icon": "https://media.valorant-api.com/agents/cc8b64c8-4b25-4ff9-6e7f-37b4da43d235/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/cc8b64c8-4b25-4ff9-6e7f-37b4da43d235/fullportrait.png",
+    "role": "Sentinel",
+    "abilities": [
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Sonic Sensor",
+        "icon": "https://media.valorant-api.com/agents/cc8b64c8-4b25-4ff9-6e7f-37b4da43d235/abilities/ability1/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Sonic Sensor</>. FIRE to place. Triggers on nearby detected enemy noise, creating a zone that <debuffred>concusses</> all players. <whitebold>Sonic Sensor</> <teal>stealths</> after placement.\r\n\r\nCan be picked up."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Barrier Mesh",
+        "icon": "https://media.valorant-api.com/agents/cc8b64c8-4b25-4ff9-6e7f-37b4da43d235/abilities/grenade/displayicon.png",
+        "description": "EQUIP <whitebold>Barrier Mesh</>. FIRE to throw. On landing, create destructible markers that fortify after a delay. These markers form barriers that block player movement."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "GravNet",
+        "icon": "https://media.valorant-api.com/agents/cc8b64c8-4b25-4ff9-6e7f-37b4da43d235/abilities/ability2/displayicon.png",
+        "description": "EQUIP <whitebold>GravNet</>. FIRE to throw. ALT FIRE to lob. Explodes on landing, forcing all players to <debuffred>crouch</> and move <debuffred>slowly</> until they remove the net."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Annihilation",
+        "icon": "https://media.valorant-api.com/agents/cc8b64c8-4b25-4ff9-6e7f-37b4da43d235/abilities/ultimate/displayicon.png",
+        "description": "EQUIP <whitebold>Annihilation</>. FIRE to launch a zone, forcing the first enemy caught into a destructible cocoon that pulls them along a path for <debuffred>lethal damage</> unless the cocoon is destroyed."
+      }
+    ]
+  },
+  "tejo": {
+    "id": "b444168c-4e35-8076-db47-ef9bf368f384",
+    "name": "Tejo",
+    "icon": "https://media.valorant-api.com/agents/b444168c-4e35-8076-db47-ef9bf368f384/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/b444168c-4e35-8076-db47-ef9bf368f384/fullportrait.png",
+    "role": "Initiator",
+    "abilities": [
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Guided Salvo",
+        "icon": "https://media.valorant-api.com/agents/b444168c-4e35-8076-db47-ef9bf368f384/abilities/ability2/displayicon.png",
+        "description": "EQUIP a tactical map. FIRE to set locations. ALT FIRE to launch missiles that travel to and repeatedly pulse, dealing <debuffred>damage</> to all players."
+      },
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Special Delivery",
+        "icon": "https://media.valorant-api.com/agents/b444168c-4e35-8076-db47-ef9bf368f384/abilities/ability1/displayicon.png",
+        "description": "EQUIP <whitebold>Special Delivery</>. FIRE to launch. ALT FIRE to launch with a bounce. Explodes on any surface, <debuffred>concussing</> and <debuffred>damaging</> all players."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Armageddon",
+        "icon": "https://media.valorant-api.com/agents/b444168c-4e35-8076-db47-ef9bf368f384/abilities/ultimate/displayicon.png",
+        "description": "EQUIP a tactical map. FIRE to set, pivot and FIRE again to cast a wave that deals high <debuffred>damage</> to all players. ALT FIRE to cancel targeting."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Stealth Drone",
+        "icon": "https://media.valorant-api.com/agents/b444168c-4e35-8076-db47-ef9bf368f384/abilities/grenade/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Stealth Drone</>. FIRE to take control. FIRE again to <debuffred>reveal</> and <debuffred>suppress</> nearby enemies in range and line of sight."
+      }
+    ]
+  },
+  "raze": {
+    "id": "f94c3b30-42be-e959-889c-5aa313dba261",
+    "name": "Raze",
+    "icon": "https://media.valorant-api.com/agents/f94c3b30-42be-e959-889c-5aa313dba261/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/f94c3b30-42be-e959-889c-5aa313dba261/fullportrait.png",
+    "role": "Duelist",
+    "abilities": [
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Blast Pack",
+        "icon": "https://media.valorant-api.com/agents/f94c3b30-42be-e959-889c-5aa313dba261/abilities/ability1/displayicon.png",
+        "description": "INSTANTLY throw a destructible <whitebold>Blast Pack</> that sticks to surfaces that fully arms after a delay. REACTIVATE to detonate, <debuffred>knocking away</> anything hit.\r\n\r\nIf fully armed, <whitebold>Blast Pack</> will also deal <debuffred>damage</> to enemies."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Paint Shells",
+        "icon": "https://media.valorant-api.com/agents/f94c3b30-42be-e959-889c-5aa313dba261/abilities/ability2/displayicon.png",
+        "description": "EQUIP <whitebold>Paint Shells</>. FIRE to throw. ALT FIRE to lob. After a delay, explode, dealing <debuffred>damage</> and creating sub-munitions, each also dealing <debuffred>damage</> to all players.\r\n\r\nResets every two kills."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Boom Bot",
+        "icon": "https://media.valorant-api.com/agents/f94c3b30-42be-e959-889c-5aa313dba261/abilities/grenade/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Boom Bot</>. FIRE to send it forward. <debuffred>Chases</> the first enemy it sees, exploding and dealing <debuffred>damage</> to enemies on impact."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Showstopper",
+        "icon": "https://media.valorant-api.com/agents/f94c3b30-42be-e959-889c-5aa313dba261/abilities/ultimate/displayicon.png",
+        "description": "INSTANTLY prepare <whitebold>Showstopper</>. FIRE to launch. Explodes on any surface, dealing high <debuffred>damage</> to all players."
+      }
+    ]
+  },
+  "chamber": {
+    "id": "22697a3d-45bf-8dd7-4fec-84a9e28c69d7",
+    "name": "Chamber",
+    "icon": "https://media.valorant-api.com/agents/22697a3d-45bf-8dd7-4fec-84a9e28c69d7/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/22697a3d-45bf-8dd7-4fec-84a9e28c69d7/fullportrait.png",
+    "role": "Sentinel",
+    "abilities": [
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Rendezvous",
+        "icon": "https://media.valorant-api.com/agents/22697a3d-45bf-8dd7-4fec-84a9e28c69d7/abilities/ability2/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Rendezvous</>. FIRE to place. While in range, REACTIVATE to instantly teleport to it.\r\n\r\nCan be recalled."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Trademark",
+        "icon": "https://media.valorant-api.com/agents/22697a3d-45bf-8dd7-4fec-84a9e28c69d7/abilities/grenade/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Trademark</>. FIRE to place. Triggers on nearby visible enemies in range, creating a zone that <debuffred>slows</> all players.\r\n\r\nCan be recalled."
+      },
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Headhunter",
+        "icon": "https://media.valorant-api.com/agents/22697a3d-45bf-8dd7-4fec-84a9e28c69d7/abilities/ability1/displayicon.png",
+        "description": "EQUIP <whitebold>Headhunter</>. FIRE to shoot. ALT FIRE to aim down sights."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Tour De Force",
+        "icon": "https://media.valorant-api.com/agents/22697a3d-45bf-8dd7-4fec-84a9e28c69d7/abilities/ultimate/displayicon.png",
+        "description": "ACTIVATE to access a sniper rifle that deals <debuffred>lethal damage</> with direct hits to the upper body.\r\n\r\nFIRE to shoot. ALT FIRE to aim down sights. On kills, create a zone that <debuffred>slows</> all players."
+      }
+    ]
+  },
+  "kayo": {
+    "id": "601dbbe7-43ce-be57-2a40-4abd24953621",
+    "name": "KAY/O",
+    "icon": "https://media.valorant-api.com/agents/601dbbe7-43ce-be57-2a40-4abd24953621/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/601dbbe7-43ce-be57-2a40-4abd24953621/fullportrait.png",
+    "role": "Initiator",
+    "abilities": [
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "FRAG/ment",
+        "icon": "https://media.valorant-api.com/agents/601dbbe7-43ce-be57-2a40-4abd24953621/abilities/grenade/displayicon.png",
+        "description": "EQUIP <whitebold>FRAG/ment</>. FIRE to throw. ALT FIRE to lob. Explodes on landing, repeatedly dealing pulses of <debuffred>damage</> to all players."
+      },
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "FLASH/drive",
+        "icon": "https://media.valorant-api.com/agents/601dbbe7-43ce-be57-2a40-4abd24953621/abilities/ability1/displayicon.png",
+        "description": "EQUIP a <whitebold>FLASH/drive</>. FIRE to throw. ALT FIRE to lob. After a delay, explode, <debuffred>flashing</> all players looking at it."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "ZERO/point",
+        "icon": "https://media.valorant-api.com/agents/601dbbe7-43ce-be57-2a40-4abd24953621/abilities/ability2/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>ZERO/point</>. FIRE to throw. Pulses on any surface, <debuffred>suppressing</> enemies within range."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "NULL/cmd",
+        "icon": "https://media.valorant-api.com/agents/601dbbe7-43ce-be57-2a40-4abd24953621/abilities/ultimate/displayicon.png",
+        "description": "INSTANTLY gain <teal>overloaded</> and repeatedly send out a pulse that <debuffred>suppresses</> enemies within range.\r\n\r\n<teal>Overloaded</> grants <teal>combat stim</>. Upon taking <debuffred>lethal damage</>, KAY/O is downed and can be re-stabilized."
+      }
+    ]
+  },
+  "kay/o": {
+    "id": "601dbbe7-43ce-be57-2a40-4abd24953621",
+    "name": "KAY/O",
+    "icon": "https://media.valorant-api.com/agents/601dbbe7-43ce-be57-2a40-4abd24953621/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/601dbbe7-43ce-be57-2a40-4abd24953621/fullportrait.png",
+    "role": "Initiator",
+    "abilities": [
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "FRAG/ment",
+        "icon": "https://media.valorant-api.com/agents/601dbbe7-43ce-be57-2a40-4abd24953621/abilities/grenade/displayicon.png",
+        "description": "EQUIP <whitebold>FRAG/ment</>. FIRE to throw. ALT FIRE to lob. Explodes on landing, repeatedly dealing pulses of <debuffred>damage</> to all players."
+      },
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "FLASH/drive",
+        "icon": "https://media.valorant-api.com/agents/601dbbe7-43ce-be57-2a40-4abd24953621/abilities/ability1/displayicon.png",
+        "description": "EQUIP a <whitebold>FLASH/drive</>. FIRE to throw. ALT FIRE to lob. After a delay, explode, <debuffred>flashing</> all players looking at it."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "ZERO/point",
+        "icon": "https://media.valorant-api.com/agents/601dbbe7-43ce-be57-2a40-4abd24953621/abilities/ability2/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>ZERO/point</>. FIRE to throw. Pulses on any surface, <debuffred>suppressing</> enemies within range."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "NULL/cmd",
+        "icon": "https://media.valorant-api.com/agents/601dbbe7-43ce-be57-2a40-4abd24953621/abilities/ultimate/displayicon.png",
+        "description": "INSTANTLY gain <teal>overloaded</> and repeatedly send out a pulse that <debuffred>suppresses</> enemies within range.\r\n\r\n<teal>Overloaded</> grants <teal>combat stim</>. Upon taking <debuffred>lethal damage</>, KAY/O is downed and can be re-stabilized."
+      }
+    ]
+  },
+  "skye": {
+    "id": "6f2a04ca-43e0-be17-7f36-b3908627744d",
+    "name": "Skye",
+    "icon": "https://media.valorant-api.com/agents/6f2a04ca-43e0-be17-7f36-b3908627744d/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/6f2a04ca-43e0-be17-7f36-b3908627744d/fullportrait.png",
+    "role": "Initiator",
+    "abilities": [
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Trailblazer",
+        "icon": "https://media.valorant-api.com/agents/6f2a04ca-43e0-be17-7f36-b3908627744d/abilities/ability1/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Trailblazer</>. FIRE to take control. FIRE again to lunge and explode, <debuffred>concussing</> all players and dealing <debuffred>damage</> to enemies on direct hits."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Guiding Light",
+        "icon": "https://media.valorant-api.com/agents/6f2a04ca-43e0-be17-7f36-b3908627744d/abilities/ability2/displayicon.png",
+        "description": "EQUIP a <whitebold>Guiding Light</>. FIRE to send it forward. HOLD FIRE to steer towards your crosshair. REACTIVATE to detonate, <debuffred>flashing</> all players looking at it."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Regrowth",
+        "icon": "https://media.valorant-api.com/agents/6f2a04ca-43e0-be17-7f36-b3908627744d/abilities/grenade/displayicon.png",
+        "description": "EQUIP <whitebold>Regrowth</>. HOLD FIRE to <teal>heal</> allies in range and line of sight. Uses a limited healing pool.\r\n\r\nCannot heal self."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Seekers",
+        "icon": "https://media.valorant-api.com/agents/6f2a04ca-43e0-be17-7f36-b3908627744d/abilities/ultimate/displayicon.png",
+        "description": "EQUIP destructible <whitebold>Seekers</>. FIRE to send out up to three <whitebold>Seekers</>. <debuffred>Chases</> the three closest enemies, <debuffred>nearsighting</> and <debuffred>slowing</> on impact."
+      }
+    ]
+  },
+  "cypher": {
+    "id": "117ed9e3-49f3-6512-3ccf-0cada7e3823b",
+    "name": "Cypher",
+    "icon": "https://media.valorant-api.com/agents/117ed9e3-49f3-6512-3ccf-0cada7e3823b/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/117ed9e3-49f3-6512-3ccf-0cada7e3823b/fullportrait.png",
+    "role": "Sentinel",
+    "abilities": [
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Cyber Cage",
+        "icon": "https://media.valorant-api.com/agents/117ed9e3-49f3-6512-3ccf-0cada7e3823b/abilities/ability1/displayicon.png",
+        "description": "INSTANTLY throw a <whitebold>Cyber Cage</>. INTERACT to create a vision-blocking cylinder that plays an audio cue when enemies come in contact.\r\n\r\nCan be picked up during BUY PHASE."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Spycam",
+        "icon": "https://media.valorant-api.com/agents/117ed9e3-49f3-6512-3ccf-0cada7e3823b/abilities/ability2/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Spycam</>. FIRE to place. <whitebold>Spycam</> <teal>stealths</> after placement. REACTIVATE to control it. FIRE to shoot a dart that <debuffred>snapshots</> enemies hit until they remove it.\r\n\r\nCan be picked up."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Trapwire",
+        "icon": "https://media.valorant-api.com/agents/117ed9e3-49f3-6512-3ccf-0cada7e3823b/abilities/grenade/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Trapwire</>. FIRE to place a wire between surfaces. <whitebold>Trapwire</> <teal>stealths</> after placement. Triggers when enemies come in contact, <debuffred>tethering</> enemies, and after a delay, <debuffred>revealing</> them if <whitebold>Trapwire</> is not destroyed.\r\n\r\nCan be picked up."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Neural Theft",
+        "icon": "https://media.valorant-api.com/agents/117ed9e3-49f3-6512-3ccf-0cada7e3823b/abilities/ultimate/displayicon.png",
+        "description": "ACTIVATE on a targeted dead enemy. After a delay, <debuffred>snapshot</> living enemies twice."
+      }
+    ]
+  },
+  "sova": {
+    "id": "320b2a48-4d9b-a075-30f1-1f93a9b638fa",
+    "name": "Sova",
+    "icon": "https://media.valorant-api.com/agents/320b2a48-4d9b-a075-30f1-1f93a9b638fa/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/320b2a48-4d9b-a075-30f1-1f93a9b638fa/fullportrait.png",
+    "role": "Initiator",
+    "abilities": [
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Shock Bolt",
+        "icon": "https://media.valorant-api.com/agents/320b2a48-4d9b-a075-30f1-1f93a9b638fa/abilities/ability1/displayicon.png",
+        "description": "EQUIP a <whitebold>Shock Bolt</>. FIRE to shoot a bolt that explodes on any surface, dealing <debuffred>damage</> to all players. HOLD FIRE to increase the bolt’s velocity. ALT FIRE to add up to two bounces."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Recon Bolt",
+        "icon": "https://media.valorant-api.com/agents/320b2a48-4d9b-a075-30f1-1f93a9b638fa/abilities/ability2/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Recon Bolt</>. FIRE to shoot a bolt that repeatedly <debuffred>reveals</> nearby enemies in range and line of sight. HOLD FIRE to increase the bolt’s velocity. ALT FIRE to add up to two bounces."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Owl Drone",
+        "icon": "https://media.valorant-api.com/agents/320b2a48-4d9b-a075-30f1-1f93a9b638fa/abilities/grenade/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Owl Drone</>. FIRE to take control. FIRE again to shoot a dart that repeatedly <debuffred>reveals</> enemies."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Hunter's Fury",
+        "icon": "https://media.valorant-api.com/agents/320b2a48-4d9b-a075-30f1-1f93a9b638fa/abilities/ultimate/displayicon.png",
+        "description": "EQUIP <whitebold>Hunter’s Fury</>. FIRE to shoot a zone that deals <debuffred>damage</>. Can be fired up to two more times.\r\n\r\nEnemies hit are <debuffred>revealed</> to Sova."
+      }
+    ]
+  },
+  "miks": {
+    "id": "7c8a4701-4de6-9355-b254-e09bc2a34b72",
+    "name": "Miks",
+    "icon": "https://media.valorant-api.com/agents/7c8a4701-4de6-9355-b254-e09bc2a34b72/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/7c8a4701-4de6-9355-b254-e09bc2a34b72/fullportrait.png",
+    "role": "Controller",
+    "abilities": [
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "M-pulse",
+        "icon": "https://media.valorant-api.com/agents/7c8a4701-4de6-9355-b254-e09bc2a34b72/abilities/grenade/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>M-Pulse</>. ALT FIRE to toggle between <debuffred>concuss</> or <teal>heal</>. FIRE to throw. Repeatedly pulses on landing, applying the selected effect on all players within range."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Waveform",
+        "icon": "https://media.valorant-api.com/agents/7c8a4701-4de6-9355-b254-e09bc2a34b72/abilities/ability2/displayicon.png",
+        "description": "EQUIP a tactical map. FIRE to set smoke locations. ALT FIRE to cast smokes."
+      },
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Harmonize",
+        "icon": "https://media.valorant-api.com/agents/7c8a4701-4de6-9355-b254-e09bc2a34b72/abilities/ability1/displayicon.png",
+        "description": "EQUIP <whitebold>Harmonize</>. FIRE on a targeted ally to grant <teal>combat stim</> and <teal>haste</> to them and yourself. On kills while active, refresh the <teal>buff</> if both <whitebold>Harmonized</> players are still alive. ALT FIRE to self-cast with no refresh."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Bassquake",
+        "icon": "https://media.valorant-api.com/agents/7c8a4701-4de6-9355-b254-e09bc2a34b72/abilities/ultimate/displayicon.png",
+        "description": "EQUIP <whitebold>Bassquake</>. FIRE to send forward a zone that <debuffred>deafens</>, <debuffred>knocks back</>, and <debuffred>slows</> all players."
+      }
+    ]
+  },
+  "killjoy": {
+    "id": "1e58de9c-4950-5125-93e9-a0aee9f98746",
+    "name": "Killjoy",
+    "icon": "https://media.valorant-api.com/agents/1e58de9c-4950-5125-93e9-a0aee9f98746/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/1e58de9c-4950-5125-93e9-a0aee9f98746/fullportrait.png",
+    "role": "Sentinel",
+    "abilities": [
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Nanoswarm",
+        "icon": "https://media.valorant-api.com/agents/1e58de9c-4950-5125-93e9-a0aee9f98746/abilities/grenade/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Nanoswarm</>. FIRE to throw. ALT FIRE to lob. <whitebold>Nanoswarm</> <teal>stealths</> after landing. INTERACT to create a zone that deals <debuffred>damage</> to all players.\r\n\r\nCan be picked up during BUY PHASE."
+      },
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "ALARMBOT",
+        "icon": "https://media.valorant-api.com/agents/1e58de9c-4950-5125-93e9-a0aee9f98746/abilities/ability1/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Alarmbot</>. FIRE to place. <whitebold>Alarmbot</> <teal>stealths</> after placement. Triggers on nearby visible enemies in range. <debuffred>Chases</> the first enemy it sees, exploding and applying <debuffred>vulnerable</>.\r\n\r\nCan be recalled."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "TURRET",
+        "icon": "https://media.valorant-api.com/agents/1e58de9c-4950-5125-93e9-a0aee9f98746/abilities/ability2/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Turret</>. While equipped, REACTIVATE to flip the direction or HOLD ALT FIRE to rotate. FIRE to place. Shoots at enemies in line of sight.\r\n\r\nCan be recalled."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Lockdown",
+        "icon": "https://media.valorant-api.com/agents/1e58de9c-4950-5125-93e9-a0aee9f98746/abilities/ultimate/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Lockdown</>. FIRE to prepare a zone. After a delay, <debuffred>detain</> enemies within range."
+      }
+    ]
+  },
+  "harbor": {
+    "id": "95b78ed7-4637-86d9-7e41-71ba8c293152",
+    "name": "Harbor",
+    "icon": "https://media.valorant-api.com/agents/95b78ed7-4637-86d9-7e41-71ba8c293152/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/95b78ed7-4637-86d9-7e41-71ba8c293152/fullportrait.png",
+    "role": "Controller",
+    "abilities": [
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "High Tide",
+        "icon": "https://media.valorant-api.com/agents/95b78ed7-4637-86d9-7e41-71ba8c293152/abilities/ability1/displayicon.png",
+        "description": "EQUIP <whitebold>High Tide</>. FIRE to send forward a vision-blocking wall that <debuffred>slows</> all players who come in contact. HOLD FIRE to steer towards your crosshair. ALT FIRE to stop early."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Storm Surge",
+        "icon": "https://media.valorant-api.com/agents/95b78ed7-4637-86d9-7e41-71ba8c293152/abilities/grenade/displayicon.png",
+        "description": "EQUIP <whitebold>Storm Surge</>. FIRE to throw. Explodes on landing, <debuffred>nearsighting</> and <debuffred>slowing</> all players."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Cove",
+        "icon": "https://media.valorant-api.com/agents/95b78ed7-4637-86d9-7e41-71ba8c293152/abilities/ability2/displayicon.png",
+        "description": "ENTER The Deep. REACTIVATE to cast a smoke. HOLD FIRE/ALT FIRE to adjust distance. RELOAD to toggle view. After casting, REACTIVATE to transform the smoke into a destructible shield."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Reckoning",
+        "icon": "https://media.valorant-api.com/agents/95b78ed7-4637-86d9-7e41-71ba8c293152/abilities/ultimate/displayicon.png",
+        "description": "EQUIP <whitebold>Reckoning</>. FIRE to push forward a vision-blocking wall that <debuffred>nearsights</> and <debuffred>slows</> all players who come in contact. REACTIVATE to stop the wall early."
+      }
+    ]
+  },
+  "vyse": {
+    "id": "efba5359-4016-a1e5-7626-b1ae76895940",
+    "name": "Vyse",
+    "icon": "https://media.valorant-api.com/agents/efba5359-4016-a1e5-7626-b1ae76895940/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/efba5359-4016-a1e5-7626-b1ae76895940/fullportrait.png",
+    "role": "Sentinel",
+    "abilities": [
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Shear",
+        "icon": "https://media.valorant-api.com/agents/efba5359-4016-a1e5-7626-b1ae76895940/abilities/ability1/displayicon.png",
+        "description": "EQUIP <whitebold>Shear</>. FIRE to place. <whitebold>Shear</> <teal>stealths</> after placement. Triggers when enemies walk on it, and after a delay, create a brief indestructible wall.\r\n\r\nCan be recalled during BUY PHASE."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Arc Rose",
+        "icon": "https://media.valorant-api.com/agents/efba5359-4016-a1e5-7626-b1ae76895940/abilities/ability2/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Arc Rose</>. FIRE to place. ALT FIRE to place it through a wall. REACTIVATE to <debuffred>flash</> all players looking at it. \r\n\r\nCan be recalled."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Razorvine",
+        "icon": "https://media.valorant-api.com/agents/efba5359-4016-a1e5-7626-b1ae76895940/abilities/grenade/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Razorvine</>. FIRE to throw. <whitebold>Razorvine</> <teal>stealths</> after landing. INTERACT to create a zone that <debuffred>slows</> and deals <debuffred>damage</> when players move through it.\r\n\r\nCan be recalled during BUY PHASE."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Steel Garden",
+        "icon": "https://media.valorant-api.com/agents/efba5359-4016-a1e5-7626-b1ae76895940/abilities/ultimate/displayicon.png",
+        "description": "EQUIP <whitebold>Steel Garden</>. FIRE to prepare a zone. After a delay, <debuffred>jam</> enemy primary weapons within range."
+      }
+    ]
+  },
+  "viper": {
+    "id": "707eab51-4836-f488-046a-cda6bf494859",
+    "name": "Viper",
+    "icon": "https://media.valorant-api.com/agents/707eab51-4836-f488-046a-cda6bf494859/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/707eab51-4836-f488-046a-cda6bf494859/fullportrait.png",
+    "role": "Controller",
+    "abilities": [
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Poison Cloud",
+        "icon": "https://media.valorant-api.com/agents/707eab51-4836-f488-046a-cda6bf494859/abilities/ability1/displayicon.png",
+        "description": "EQUIP <whitebold>Poison Cloud</>. FIRE to throw. ALT FIRE to lob. REACTIVATE to consume fuel to create a <whitebold>toxic</> smoke that <debuffred>decays</> enemies.\r\n\r\nCan be picked up during BUY PHASE."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Toxic Screen",
+        "icon": "https://media.valorant-api.com/agents/707eab51-4836-f488-046a-cda6bf494859/abilities/ability2/displayicon.png",
+        "description": "EQUIP <whitebold>Toxic Screen</>. FIRE to send forward and place a line of emitters. REACTIVATE to consume fuel to create a <whitebold>toxic</> vision-blocking wall that <debuffred>decays</> enemies."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Snake Bite",
+        "icon": "https://media.valorant-api.com/agents/707eab51-4836-f488-046a-cda6bf494859/abilities/grenade/displayicon.png",
+        "description": "EQUIP <whitebold>Snake Bite</>. FIRE to launch. On landing, create a zone that grants <debuffred>vulnerable</> and deals low <debuffred>damage</> to all players."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Viper's Pit",
+        "icon": "https://media.valorant-api.com/agents/707eab51-4836-f488-046a-cda6bf494859/abilities/ultimate/displayicon.png",
+        "description": "EQUIP <whitebold>Viper’s Pit</>. FIRE to form a large <whitebold>toxic</> vision-blocking cloud that <debuffred>decays</> enemies inside.\r\n\r\nHOLD ACTIVATE to cancel the cloud."
+      }
+    ]
+  },
+  "hush": {
+    "id": "ddd5a15c-4fbe-42fa-3789-11a55ca5ee04",
+    "name": "Hush",
+    "icon": "https://media.valorant-api.com/agents/ddd5a15c-4fbe-42fa-3789-11a55ca5ee04/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/ddd5a15c-4fbe-42fa-3789-11a55ca5ee04/fullportrait.png",
+    "role": "Duelist",
+    "abilities": [
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Flashbulb",
+        "icon": "https://media.valorant-api.com/agents/ddd5a15c-4fbe-42fa-3789-11a55ca5ee04/abilities/ability1/displayicon.png",
+        "description": "EQUIP <whitebold>Flashbulb</>. FIRE to throw. ALT FIRE to prepare it instead. REACTIVATE to direct it towards your crosshair. Explodes on any surface or after a delay, <debuffred>flashing</> all players looking at it."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Displacement",
+        "icon": "https://media.valorant-api.com/agents/ddd5a15c-4fbe-42fa-3789-11a55ca5ee04/abilities/ability2/displayicon.png",
+        "description": "EQUIP <whitebold>Displacement</>. FIRE to throw. ALT FIRE to prepare it instead. REACTIVATE to direct it towards your crosshair. Explodes on any surface or after a delay, <debuffred>pulling</> all players towards the center and <debuffred>concussing</> them if they collide with any surface or another player.\r\n\r\nResets every two kills."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Flow",
+        "icon": "https://media.valorant-api.com/agents/ddd5a15c-4fbe-42fa-3789-11a55ca5ee04/abilities/grenade/displayicon.png",
+        "description": "INSTANTLY create an anchor. If Hush is in the air, briefly levitate in place. After a delay, propel towards it."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Suspension",
+        "icon": "https://media.valorant-api.com/agents/ddd5a15c-4fbe-42fa-3789-11a55ca5ee04/abilities/ultimate/displayicon.png",
+        "description": "INSTANTLY prepare <whitebold>Suspension</>. FIRE to send it forward, steering with your crosshair. REACTIVATE or press FIRE again to detonate, <debuffred>levitating</> all players."
+      },
+      {
+        "slot": "Passive",
+        "slotKey": "X",
+        "name": "Telekinesis",
+        "icon": "https://media.valorant-api.com/agents/ddd5a15c-4fbe-42fa-3789-11a55ca5ee04/abilities/passive/displayicon.png",
+        "description": "Hush can pick up weapons, the Spike, and INTERACT with switches from an increased range."
+      }
+    ]
+  },
+  "phoenix": {
+    "id": "eb93336a-449b-9c1b-0a54-a891f7921d69",
+    "name": "Phoenix",
+    "icon": "https://media.valorant-api.com/agents/eb93336a-449b-9c1b-0a54-a891f7921d69/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/eb93336a-449b-9c1b-0a54-a891f7921d69/fullportrait.png",
+    "role": "Duelist",
+    "abilities": [
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Blaze",
+        "icon": "https://media.valorant-api.com/agents/eb93336a-449b-9c1b-0a54-a891f7921d69/abilities/grenade/displayicon.png",
+        "description": "EQUIP <whitebold>Blaze</>. FIRE to send forward a vision-blocking <whitebold>fire</> wall that deals <debuffred>damage</> to all players. HOLD FIRE to steer towards your crosshair."
+      },
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Hot Hands",
+        "icon": "https://media.valorant-api.com/agents/eb93336a-449b-9c1b-0a54-a891f7921d69/abilities/ability1/displayicon.png",
+        "description": "EQUIP <whitebold>Hot Hands</>. FIRE to throw. ALT FIRE to lob. On landing, create a <whitebold>fire</> zone that deals <debuffred>damage</> to all players."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Curveball",
+        "icon": "https://media.valorant-api.com/agents/eb93336a-449b-9c1b-0a54-a891f7921d69/abilities/ability2/displayicon.png",
+        "description": "EQUIP a <whitebold>Curveball</>. FIRE to curve left, ALT FIRE to curve right. After a delay, explode, <debuffred>flashing</> all players looking at it.\r\n\r\nResets every two kills."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Run it Back",
+        "icon": "https://media.valorant-api.com/agents/eb93336a-449b-9c1b-0a54-a891f7921d69/abilities/ultimate/displayicon.png",
+        "description": "INSTANTLY place a marker at your location. Upon taking <debuffred>lethal damage</> or when <whitebold>Run it Back</> expires, return to the marker with full health and the amount of armor you had when the ability was activated."
+      }
+    ]
+  },
+  "veto": {
+    "id": "92eeef5d-43b5-1d4a-8d03-b3927a09034b",
+    "name": "Veto",
+    "icon": "https://media.valorant-api.com/agents/92eeef5d-43b5-1d4a-8d03-b3927a09034b/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/92eeef5d-43b5-1d4a-8d03-b3927a09034b/fullportrait.png",
+    "role": "Sentinel",
+    "abilities": [
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Interceptor",
+        "icon": "https://media.valorant-api.com/agents/92eeef5d-43b5-1d4a-8d03-b3927a09034b/abilities/ability2/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Interceptor</>. FIRE to place. REACTIVATE to activate. While active, destroy any enemy utility that can be shot or would bounce off players in range and line of sight.\r\n\r\nCan be recalled."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Crosscut",
+        "icon": "https://media.valorant-api.com/agents/92eeef5d-43b5-1d4a-8d03-b3927a09034b/abilities/grenade/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Crosscut</>. FIRE to place. While in range, INTERACT to teleport to it.\r\n\r\nCan be recalled during BUY PHASE."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Evolution",
+        "icon": "https://media.valorant-api.com/agents/92eeef5d-43b5-1d4a-8d03-b3927a09034b/abilities/ultimate/displayicon.png",
+        "description": "INSTANTLY gain <teal>evolution</>.\r\n\r\n<teal>Evolution</> grants <teal>combat stim</>, continuous <teal>healing</>, and <teal>immunity</> to all debuffs and damage, except weapons."
+      },
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Chokehold",
+        "icon": "https://media.valorant-api.com/agents/92eeef5d-43b5-1d4a-8d03-b3927a09034b/abilities/ability1/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Chokehold</>. FIRE to throw. <whitebold>Chokehold</> <teal>stealths</> after landing. Triggers on nearby visible enemies in range, <debuffred>deafening</>, <debuffred>decaying</>, and <debuffred>tethering</> enemies.\r\n\r\nCan be recalled during BUY PHASE."
+      }
+    ]
+  },
+  "astra": {
+    "id": "41fb69c1-4189-7b37-f117-bcaf1e96f1bf",
+    "name": "Astra",
+    "icon": "https://media.valorant-api.com/agents/41fb69c1-4189-7b37-f117-bcaf1e96f1bf/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/41fb69c1-4189-7b37-f117-bcaf1e96f1bf/fullportrait.png",
+    "role": "Controller",
+    "abilities": [
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Nova Pulse",
+        "icon": "https://media.valorant-api.com/agents/41fb69c1-4189-7b37-f117-bcaf1e96f1bf/abilities/ability1/displayicon.png",
+        "description": "ACTIVATE a <whitebold>Star</> to detonate it, <debuffred>concussing</> all players hit."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Nebula",
+        "icon": "https://media.valorant-api.com/agents/41fb69c1-4189-7b37-f117-bcaf1e96f1bf/abilities/ability2/displayicon.png",
+        "description": "ACTIVATE a <whitebold>Star</> to transform it into a smoke."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Gravity Well",
+        "icon": "https://media.valorant-api.com/agents/41fb69c1-4189-7b37-f117-bcaf1e96f1bf/abilities/grenade/displayicon.png",
+        "description": "ACTIVATE a <whitebold>Star</> to create a zone that <debuffred>pulls</> all players to the center, exploding and applying <debuffred>vulnerable</> to all players."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Cosmic Divide",
+        "icon": "https://media.valorant-api.com/agents/41fb69c1-4189-7b37-f117-bcaf1e96f1bf/abilities/ultimate/displayicon.png",
+        "description": "ENTER <whitebold>Astral Form</>. ALT FIRE to EQUIP <whitebold>Cosmic Divide</>. FIRE to set, pivot and FIRE again to create an indestructible wall that blocks audio."
+      },
+      {
+        "slot": "Passive",
+        "slotKey": "X",
+        "name": "Astral Form",
+        "icon": "https://media.valorant-api.com/agents/41fb69c1-4189-7b37-f117-bcaf1e96f1bf/abilities/passive/displayicon.png",
+        "description": "ACTIVATE ULTIMATE to ENTER <whitebold>Astral Form</>. FIRE to cast <whitebold>Stars</>. \r\n\r\nINTERACT to recall a <whitebold>Star</>. Recalling a <whitebold>Star</> forms a brief smoke."
+      }
+    ]
+  },
+  "brimstone": {
+    "id": "9f0d8ba9-4140-b941-57d3-a7ad57c6b417",
+    "name": "Brimstone",
+    "icon": "https://media.valorant-api.com/agents/9f0d8ba9-4140-b941-57d3-a7ad57c6b417/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/9f0d8ba9-4140-b941-57d3-a7ad57c6b417/fullportrait.png",
+    "role": "Controller",
+    "abilities": [
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Stim Beacon",
+        "icon": "https://media.valorant-api.com/agents/9f0d8ba9-4140-b941-57d3-a7ad57c6b417/abilities/grenade/displayicon.png",
+        "description": "INSTANTLY throw a <whitebold>Stim Beacon</>. On landing, create a zone that grants <teal>combat stim</> and <teal>haste</> to allies."
+      },
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Incendiary",
+        "icon": "https://media.valorant-api.com/agents/9f0d8ba9-4140-b941-57d3-a7ad57c6b417/abilities/ability1/displayicon.png",
+        "description": "EQUIP <whitebold>Incendiary</>. FIRE to launch. On landing, create a zone that deals <debuffred>damage</> to all players."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Sky Smoke",
+        "icon": "https://media.valorant-api.com/agents/9f0d8ba9-4140-b941-57d3-a7ad57c6b417/abilities/ability2/displayicon.png",
+        "description": "EQUIP a tactical map. FIRE to set smoke locations. ALT FIRE to cast smokes."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Orbital Strike",
+        "icon": "https://media.valorant-api.com/agents/9f0d8ba9-4140-b941-57d3-a7ad57c6b417/abilities/ultimate/displayicon.png",
+        "description": "EQUIP a tactical map. FIRE to cast an <whitebold>Orbital Strike</> at a location, dealing high <debuffred>damage</> over time to all players."
+      }
+    ]
+  },
+  "iso": {
+    "id": "0e38b510-41a8-5780-5e8f-568b2a4f2d6c",
+    "name": "Iso",
+    "icon": "https://media.valorant-api.com/agents/0e38b510-41a8-5780-5e8f-568b2a4f2d6c/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/0e38b510-41a8-5780-5e8f-568b2a4f2d6c/fullportrait.png",
+    "role": "Duelist",
+    "abilities": [
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Undercut",
+        "icon": "https://media.valorant-api.com/agents/0e38b510-41a8-5780-5e8f-568b2a4f2d6c/abilities/ability1/displayicon.png",
+        "description": "EQUIP <whitebold>Undercut</>. FIRE to send it forward. Applies <debuffred>suppress</> and <debuffred>vulnerable</> to all players."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Kill Contract",
+        "icon": "https://media.valorant-api.com/agents/0e38b510-41a8-5780-5e8f-568b2a4f2d6c/abilities/ultimate/displayicon.png",
+        "description": "EQUIP <whitebold>Kill Contract</>. FIRE to send forward a zone that pulls you and the first enemy hit into a duel.\r\n\r\nChannel <whitebold>Focus</> at the start of a duel."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Double Tap",
+        "icon": "https://media.valorant-api.com/agents/0e38b510-41a8-5780-5e8f-568b2a4f2d6c/abilities/ability2/displayicon.png",
+        "description": "INSTANTLY channel <whitebold>Focus</>. Gain a shield that blocks one instance of damage."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Contingency",
+        "icon": "https://media.valorant-api.com/agents/0e38b510-41a8-5780-5e8f-568b2a4f2d6c/abilities/grenade/displayicon.png",
+        "description": "EQUIP <whitebold>Contingency</>. FIRE to push forward an indestructible vision-blocking wall. ALT FIRE for a slower wall."
+      }
+    ]
+  },
+  "clove": {
+    "id": "1dbf2edd-4729-0984-3115-daa5eed44993",
+    "name": "Clove",
+    "icon": "https://media.valorant-api.com/agents/1dbf2edd-4729-0984-3115-daa5eed44993/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/1dbf2edd-4729-0984-3115-daa5eed44993/fullportrait.png",
+    "role": "Controller",
+    "abilities": [
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Pick-me-up",
+        "icon": "https://media.valorant-api.com/agents/1dbf2edd-4729-0984-3115-daa5eed44993/abilities/grenade/displayicon.png",
+        "description": "ACTIVATE on a targeted dead enemy that you damaged or killed to gain <teal>haste</> and <teal>overheal</>."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Ruse",
+        "icon": "https://media.valorant-api.com/agents/1dbf2edd-4729-0984-3115-daa5eed44993/abilities/ability2/displayicon.png",
+        "description": "EQUIP a tactical map. FIRE to set smoke locations. ALT FIRE to cast smokes.\r\n\r\nWhile dead, Clove can access <whitebold>Ruse</> to cast brief smokes."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Not Dead Yet",
+        "icon": "https://media.valorant-api.com/agents/1dbf2edd-4729-0984-3115-daa5eed44993/abilities/ultimate/displayicon.png",
+        "description": "On death, ACTIVATE to channel a <teal>self-resurrect</>. During the channel, Clove is <teal>intangible</>. REACTIVATE to end the channel early. Once resurrected, secure a kill or damaging assist to stay alive."
+      },
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Meddle",
+        "icon": "https://media.valorant-api.com/agents/1dbf2edd-4729-0984-3115-daa5eed44993/abilities/ability1/displayicon.png",
+        "description": "EQUIP <whitebold>Meddle</>. FIRE to throw. Explodes on landing, <debuffred>decaying</> all players."
+      }
+    ]
+  },
+  "neon": {
+    "id": "bb2a4828-46eb-8cd1-e765-15848195d751",
+    "name": "Neon",
+    "icon": "https://media.valorant-api.com/agents/bb2a4828-46eb-8cd1-e765-15848195d751/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/bb2a4828-46eb-8cd1-e765-15848195d751/fullportrait.png",
+    "role": "Duelist",
+    "abilities": [
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "High Gear",
+        "icon": "https://media.valorant-api.com/agents/bb2a4828-46eb-8cd1-e765-15848195d751/abilities/ability2/displayicon.png",
+        "description": "INSTANTLY consume fuel to gain <teal>haste</>. REACTIVATE to cancel. ALT FIRE to slide forward or in your movement direction.\r\n\r\nSlide resets every two kills."
+      },
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Relay Bolt",
+        "icon": "https://media.valorant-api.com/agents/bb2a4828-46eb-8cd1-e765-15848195d751/abilities/ability1/displayicon.png",
+        "description": "INSTANTLY throw a bolt that bounces once. Explodes on each surface, <debuffred>concussing</> all players."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Fast Lane",
+        "icon": "https://media.valorant-api.com/agents/bb2a4828-46eb-8cd1-e765-15848195d751/abilities/grenade/displayicon.png",
+        "description": "INSTANTLY launch two vision-blocking walls that extend until they hit a surface."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Overdrive",
+        "icon": "https://media.valorant-api.com/agents/bb2a4828-46eb-8cd1-e765-15848195d751/abilities/ultimate/displayicon.png",
+        "description": "INSTANTLY refresh <whitebold>High Gear</>. Access an accurate lightning beam that can be used while activating <whitebold>High Gear</>.\r\n\r\nFIRE to shoot. On kills, fully recharge fuel."
+      }
+    ]
+  },
+  "yoru": {
+    "id": "7f94d92c-4234-0a36-9646-3a87eb8b5c89",
+    "name": "Yoru",
+    "icon": "https://media.valorant-api.com/agents/7f94d92c-4234-0a36-9646-3a87eb8b5c89/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/7f94d92c-4234-0a36-9646-3a87eb8b5c89/fullportrait.png",
+    "role": "Duelist",
+    "abilities": [
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "FAKEOUT",
+        "icon": "https://media.valorant-api.com/agents/7f94d92c-4234-0a36-9646-3a87eb8b5c89/abilities/grenade/displayicon.png",
+        "description": "EQUIP <whitebold>Fakeout</>. FIRE to send a destructible clone forward. ALT FIRE to place a marker at your location. INTERACT to transform the marker into a clone.\r\n\r\nClones continuously walk forward and will turn toward the first enemy that shoots it, <debuffred>flashing</> all players looking at it."
+      },
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "BLINDSIDE",
+        "icon": "https://media.valorant-api.com/agents/7f94d92c-4234-0a36-9646-3a87eb8b5c89/abilities/ability1/displayicon.png",
+        "description": "EQUIP <whitebold>Blindside</>. FIRE to throw. After bouncing off a surface, explode, <debuffred>flashing</> all players looking at it."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "GATECRASH",
+        "icon": "https://media.valorant-api.com/agents/7f94d92c-4234-0a36-9646-3a87eb8b5c89/abilities/ability2/displayicon.png",
+        "description": "EQUIP a <whitebold>Gatecrash</>. FIRE to send it forward. ALT FIRE to place. REACTIVATE to teleport to it. INTERACT to fake a teleport.\r\n\r\nResets every two kills."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "DIMENSIONAL DRIFT",
+        "icon": "https://media.valorant-api.com/agents/7f94d92c-4234-0a36-9646-3a87eb8b5c89/abilities/ultimate/displayicon.png",
+        "description": "EQUIP <whitebold>Dimensional Drift</>. FIRE to become <teal>intangible</> and <teal>invisible</>. <whitebold>Gatecrash</> is accessible during this state. REACTIVATE to exit early."
+      }
+    ]
+  },
+  "waylay": {
+    "id": "df1cb487-4902-002e-5c17-d28e83e78588",
+    "name": "Waylay",
+    "icon": "https://media.valorant-api.com/agents/df1cb487-4902-002e-5c17-d28e83e78588/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/df1cb487-4902-002e-5c17-d28e83e78588/fullportrait.png",
+    "role": "Duelist",
+    "abilities": [
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Refract",
+        "icon": "https://media.valorant-api.com/agents/df1cb487-4902-002e-5c17-d28e83e78588/abilities/ability2/displayicon.png",
+        "description": "INSTANTLY place a marker at your location. REACTIVATE to travel to it. While traveling, Waylay is <teal>immune</> but cannot see enemies.\r\n\r\nResets every two kills."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Saturate",
+        "icon": "https://media.valorant-api.com/agents/df1cb487-4902-002e-5c17-d28e83e78588/abilities/grenade/displayicon.png",
+        "description": "EQUIP <whitebold>Saturate</>. FIRE to throw. Explodes on landing, <debuffred>hindering</> all players."
+      },
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Lightspeed",
+        "icon": "https://media.valorant-api.com/agents/df1cb487-4902-002e-5c17-d28e83e78588/abilities/ability1/displayicon.png",
+        "description": "EQUIP <whitebold>Lightspeed</>. FIRE to dash forward twice. ALT FIRE to dash forward once.\r\n\r\nOnly the first dash can launch upward."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Convergent Paths",
+        "icon": "https://media.valorant-api.com/agents/df1cb487-4902-002e-5c17-d28e83e78588/abilities/ultimate/displayicon.png",
+        "description": "EQUIP <whitebold>Convergent Paths</>. FIRE to gain <teal>haste</> and send forward a zone that <debuffred>hinders</> all players."
+      }
+    ]
+  },
+  "sage": {
+    "id": "569fdd95-4d10-43ab-ca70-79becc718b46",
+    "name": "Sage",
+    "icon": "https://media.valorant-api.com/agents/569fdd95-4d10-43ab-ca70-79becc718b46/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/569fdd95-4d10-43ab-ca70-79becc718b46/fullportrait.png",
+    "role": "Sentinel",
+    "abilities": [
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Slow Orb",
+        "icon": "https://media.valorant-api.com/agents/569fdd95-4d10-43ab-ca70-79becc718b46/abilities/ability1/displayicon.png",
+        "description": "EQUIP a <whitebold>Slow Orb</>. FIRE to throw. On landing, create a zone that <debuffred>slows</> all players and plays an audio cue when enemies run through it."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Healing Orb",
+        "icon": "https://media.valorant-api.com/agents/569fdd95-4d10-43ab-ca70-79becc718b46/abilities/ability2/displayicon.png",
+        "description": "EQUIP <whitebold>Healing Orb</>. FIRE on a damaged ally to grant <teal>healing</>. ALT FIRE to self-cast."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Barrier Orb",
+        "icon": "https://media.valorant-api.com/agents/569fdd95-4d10-43ab-ca70-79becc718b46/abilities/grenade/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Barrier Orb</>. While equipped, REACTIVATE to pivot the wall or HOLD ALT FIRE to rotate. FIRE to place a destructible wall that fortifies after a delay."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Resurrection",
+        "icon": "https://media.valorant-api.com/agents/569fdd95-4d10-43ab-ca70-79becc718b46/abilities/ultimate/displayicon.png",
+        "description": "EQUIP <whitebold>Resurrection</>. FIRE on a targeted dead ally to <teal>resurrect</> them."
+      }
+    ]
+  },
+  "reyna": {
+    "id": "a3bfb853-43b2-7238-a4f1-ad90e9e46bcc",
+    "name": "Reyna",
+    "icon": "https://media.valorant-api.com/agents/a3bfb853-43b2-7238-a4f1-ad90e9e46bcc/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/a3bfb853-43b2-7238-a4f1-ad90e9e46bcc/fullportrait.png",
+    "role": "Duelist",
+    "abilities": [
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Devour",
+        "icon": "https://media.valorant-api.com/agents/a3bfb853-43b2-7238-a4f1-ad90e9e46bcc/abilities/ability1/displayicon.png",
+        "description": "INSTANTLY consume a <whitebold>Soul Orb</> to <teal>heal</>. Excess healing is converted into <teal>overheal</>.\r\n\r\nWhile ULTIMATE is active, <whitebold>Devour</> auto-casts."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Dismiss",
+        "icon": "https://media.valorant-api.com/agents/a3bfb853-43b2-7238-a4f1-ad90e9e46bcc/abilities/ability2/displayicon.png",
+        "description": "INSTANTLY consume a <whitebold>Soul Orb</> to briefly become <teal>intangible</>. REACTIVATE to cancel early.\r\n\r\nWhile ULTIMATE is active, also gain <teal>invisibility</>."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Leer",
+        "icon": "https://media.valorant-api.com/agents/a3bfb853-43b2-7238-a4f1-ad90e9e46bcc/abilities/grenade/displayicon.png",
+        "description": "EQUIP a destructible <whitebold>Leer</>. FIRE to send. After a delay, form, <debuffred>nearsighting</> enemies looking at it."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Empress",
+        "icon": "https://media.valorant-api.com/agents/a3bfb853-43b2-7238-a4f1-ad90e9e46bcc/abilities/ultimate/displayicon.png",
+        "description": "INSTANTLY gain <teal>empress</>.\r\n\r\n<teal>Empress</> grants <teal>combat stim</>, endless <whitebold>Soul Orb</> consumption, and permanent <teal>overheal</>."
+      }
+    ]
+  },
+  "omen": {
+    "id": "8e253930-4c05-31dd-1b6c-968525494517",
+    "name": "Omen",
+    "icon": "https://media.valorant-api.com/agents/8e253930-4c05-31dd-1b6c-968525494517/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/8e253930-4c05-31dd-1b6c-968525494517/fullportrait.png",
+    "role": "Controller",
+    "abilities": [
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Paranoia",
+        "icon": "https://media.valorant-api.com/agents/8e253930-4c05-31dd-1b6c-968525494517/abilities/ability1/displayicon.png",
+        "description": "EQUIP <whitebold>Paranoia</>. FIRE to send it forward. Applies <debuffred>nearsight</> and <debuffred>deafens</> all players."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Dark Cover",
+        "icon": "https://media.valorant-api.com/agents/8e253930-4c05-31dd-1b6c-968525494517/abilities/ability2/displayicon.png",
+        "description": "ENTER Shadow Vision. REACTIVATE to cast a smoke. HOLD FIRE/ALT FIRE to adjust distance. RELOAD to toggle view."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Shrouded Step",
+        "icon": "https://media.valorant-api.com/agents/8e253930-4c05-31dd-1b6c-968525494517/abilities/grenade/displayicon.png",
+        "description": "EQUIP a <whitebold>Shrouded Step</>. FIRE to briefly channel, then teleport to a targeted location."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "From the Shadows",
+        "icon": "https://media.valorant-api.com/agents/8e253930-4c05-31dd-1b6c-968525494517/abilities/ultimate/displayicon.png",
+        "description": "EQUIP a tactical map. FIRE to begin a teleport to a selected location. While teleporting, Omen appears as a destructible shade at the destination. REACTIVATE to cancel."
+      }
+    ]
+  },
+  "jett": {
+    "id": "add6443a-41bd-e414-f6ad-e58d267f4e95",
+    "name": "Jett",
+    "icon": "https://media.valorant-api.com/agents/add6443a-41bd-e414-f6ad-e58d267f4e95/displayicon.png",
+    "portrait": "https://media.valorant-api.com/agents/add6443a-41bd-e414-f6ad-e58d267f4e95/fullportrait.png",
+    "role": "Duelist",
+    "abilities": [
+      {
+        "slot": "Ability1",
+        "slotKey": "Q",
+        "name": "Updraft",
+        "icon": "https://media.valorant-api.com/agents/add6443a-41bd-e414-f6ad-e58d267f4e95/abilities/ability1/displayicon.png",
+        "description": "INSTANTLY propel high into the air."
+      },
+      {
+        "slot": "Ability2",
+        "slotKey": "E",
+        "name": "Tailwind",
+        "icon": "https://media.valorant-api.com/agents/add6443a-41bd-e414-f6ad-e58d267f4e95/abilities/ability2/displayicon.png",
+        "description": "INSTANTLY prepare a dash. REACTIVATE to dash forward or in your movement direction.\r\n\r\nResets every two kills."
+      },
+      {
+        "slot": "Grenade",
+        "slotKey": "C",
+        "name": "Cloudburst",
+        "icon": "https://media.valorant-api.com/agents/add6443a-41bd-e414-f6ad-e58d267f4e95/abilities/grenade/displayicon.png",
+        "description": "INSTANTLY throw a cloud. Forms into a brief smoke on any surface or after a delay. HOLD ACTIVATE to steer towards your crosshair."
+      },
+      {
+        "slot": "Ultimate",
+        "slotKey": "X",
+        "name": "Blade Storm",
+        "icon": "https://media.valorant-api.com/agents/add6443a-41bd-e414-f6ad-e58d267f4e95/abilities/ultimate/displayicon.png",
+        "description": "INSTANTLY access five accurate throwing knives that deal <debuffred>lethal damage</> with direct hits to the head.\r\n\r\nFIRE to shoot. On kills, refresh your knives. ALT FIRE to throw all remaining knives without a refresh."
+      },
+      {
+        "slot": "Passive",
+        "slotKey": "X",
+        "name": "Drift",
+        "icon": "https://media.valorant-api.com/agents/add6443a-41bd-e414-f6ad-e58d267f4e95/abilities/passive/displayicon.png",
+        "description": "HOLD JUMP while falling to <teal>glide</>."
+      }
+    ]
+  }
+}

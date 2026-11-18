@@ -5,8 +5,8 @@ const LOADING_STAGES = [
   'Querying official Riot match telemetry...',
   'Ingesting round economy & spatial kill coordinates...',
   'Auto-detecting player role & playstyle archetype...',
-  'Evaluating ONNX Neural Sequence momentum & tilt pivots...',
-  'Synthesizing Immortal-tier coaching debrief via Gemini AI...'
+  'Computing role-conditioned habits vs empirical peer baselines...',
+  'Synthesizing tactical coaching debrief via Gemini AI...'
 ];
 
 export default function SearchHero({ onSearch, isLoading }) {
@@ -33,16 +33,16 @@ export default function SearchHero({ onSearch, isLoading }) {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] max-w-2xl mx-auto text-center px-4 animate-fade-in">
-      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-valo-red/10 border border-valo-red/30 text-valo-red text-xs font-black tracking-widest uppercase mb-6 animate-pulse">
-        ✦ Immortal-Ranked AI Coaching Engine
+      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-valo-red/10 border border-valo-red/30 text-valo-red text-min font-black tracking-widest uppercase mb-6 animate-pulse">
+        ✦ Habit coaching from your last 50 matches
       </div>
 
-      <h1 className="text-5xl sm:text-6xl font-black italic tracking-tight mb-4 uppercase text-transparent bg-clip-text bg-gradient-to-r from-valo-light to-gray-400">
+      <h1 className="text-title font-black italic tracking-tight mb-4 uppercase text-transparent bg-clip-text bg-gradient-to-r from-valo-light to-gray-400">
         AI Match <span className="text-valo-red">Coach</span>
       </h1>
       
-      <p className="text-gray-400 mb-8 text-base sm:text-lg max-w-lg">
-        Unlock hidden performance patterns, tactical 2D death heatmaps, and pro VCT debriefs powered by Machine Learning & Gemini.
+      <p className="text-gray-400 mb-8 text-body max-w-lg">
+        See the habits behind your rounds: where you die, whether you trade, how you buy, compared with players in your own lobbies.
       </p>
 
       <form onSubmit={handleSubmit} className="w-full space-y-4">
@@ -53,7 +53,7 @@ export default function SearchHero({ onSearch, isLoading }) {
             <select 
               value={region}
               onChange={(e) => setRegion(e.target.value)}
-              className="bg-transparent text-gray-200 font-bold text-xs sm:text-sm outline-none cursor-pointer hover:text-white disabled:opacity-50"
+              className="bg-transparent text-gray-200 font-bold text-min sm:text-secondary outline-none cursor-pointer hover:text-white disabled:opacity-50"
               disabled={isLoading}
             >
               <option value="ap" className="bg-gray-900">AP (Asia)</option>
@@ -66,12 +66,12 @@ export default function SearchHero({ onSearch, isLoading }) {
           {/* Main Input */}
           <input
             type="text"
-            placeholder="TenZ#00005 or PRX f0rsakeN#bibii"
+            placeholder="Name#TAG"
             required
             disabled={isLoading}
             value={riotId}
             onChange={(e) => setRiotId(e.target.value)}
-            className="flex-1 bg-transparent px-3 py-2 text-base sm:text-lg font-medium text-white placeholder-gray-500 focus:outline-none disabled:opacity-50 min-w-0"
+            className="flex-1 bg-transparent px-3 py-2 text-body font-medium text-white placeholder-gray-500 focus:outline-none disabled:opacity-50 min-w-0"
           />
           
           {/* Search Button */}
@@ -88,14 +88,14 @@ export default function SearchHero({ onSearch, isLoading }) {
         {isLoading && (
           <div className="glass-panel p-3.5 bg-black/50 border border-valo-red/30 rounded-xl flex items-center justify-center gap-3 animate-pulse">
             <Activity className="w-4 h-4 text-valo-red animate-spin" />
-            <span className="text-xs font-mono font-bold text-gray-300">
+            <span className="text-min font-bold text-gray-300">
               {LOADING_STAGES[stageIndex]}
             </span>
           </div>
         )}
 
         {/* System Auto-Detection Callout */}
-        <div className="inline-flex items-center gap-2 text-xs font-semibold text-gray-400 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full">
+        <div className="inline-flex items-center gap-2 text-min font-semibold text-gray-400 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full">
           <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
           <span>Auto-detects Playstyle Archetype, Primary Role, and Map from recent matches</span>
         </div>

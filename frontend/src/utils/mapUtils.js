@@ -55,6 +55,14 @@ export const MAP_CONFIG = {
     yAdd: 0.5,
     icon: 'https://media.valorant-api.com/maps/224b0a95-48b9-f703-1bd8-67aca101a61f/displayicon.png'
   },
+  corrode: {
+    name: 'Corrode',
+    xMult: 0.00007,
+    yMult: -0.00007,
+    xAdd: 0.526158,
+    yAdd: 0.5,
+    icon: 'https://media.valorant-api.com/maps/1c18ab1f-420d-0d8b-71d0-77ad3c439115/displayicon.png'
+  },
   icebox: {
     name: 'Icebox',
     xMult: 0.000072,
@@ -70,18 +78,57 @@ export const MAP_CONFIG = {
     xAdd: 0.465123,
     yAdd: 0.833078,
     icon: 'https://media.valorant-api.com/maps/2fb9a4fd-47b8-4e7d-a969-74b4046ebd53/displayicon.png'
+  },
+  fracture: {
+    name: 'Fracture',
+    xMult: 0.000078,
+    yMult: -0.000078,
+    xAdd: 0.556952,
+    yAdd: 1.155886,
+    icon: 'https://media.valorant-api.com/maps/b529448b-4d60-346e-e89e-00a4c527a405/displayicon.png'
+  },
+  pearl: {
+    name: 'Pearl',
+    xMult: 0.000078,
+    yMult: -0.000078,
+    xAdd: 0.480469,
+    yAdd: 0.916016,
+    icon: 'https://media.valorant-api.com/maps/fd267378-4d1d-484f-ff52-77821ed10dc2/displayicon.png'
+  },
+  summit: {
+    name: 'Summit',
+    xMult: 0.000075,
+    yMult: -0.000075,
+    xAdd: 0.047401,
+    yAdd: 0.978891,
+    icon: 'https://media.valorant-api.com/maps/756da597-416b-c0f2-f47b-afbdf28670bc/displayicon.png'
   }
 };
 
+/**
+ * World (game units) -> minimap percent, using valorant-api.com's per-map calibration.
+ * One formula for every map: image x from game Y, image y from game X (validated: 97.8-100% of
+ * real deaths land on drawn map pixels for all 8 pool maps; the old "xy" special case put ~50%
+ * of Abyss/Corrode deaths off the map). Returns null for maps without calibration.
+ * Not clamped: off-image points must stay off-image, not get pinned to the edge.
+ */
 export function worldToMiniMap(x, y, mapName) {
-  const key = (mapName || '').toLowerCase().trim();
-  const config = MAP_CONFIG[key] || MAP_CONFIG.ascent;
-  
-  const canvasX = (y * config.xMult + config.xAdd) * 100;
-  const canvasY = (x * config.yMult + config.yAdd) * 100;
-  
+  const config = MAP_CONFIG[(mapName || '').toLowerCase().trim()];
+  if (!config || x == null || y == null) return null;
   return {
-    left: Math.max(3, Math.min(97, canvasX)),
-    top: Math.max(3, Math.min(97, canvasY))
+    left: (y * config.xMult + config.xAdd) * 100,
+    top: (x * config.yMult + config.yAdd) * 100
   };
+}
+
+/**
+ * In-game view angle (radians, world axes) -> CSS rotation in degrees on the minimap,
+ * with the same axis swap and scale signs as worldToMiniMap.
+ */
+export function minimapViewAngleDeg(viewRadians, mapName) {
+  const config = MAP_CONFIG[(mapName || '').toLowerCase().trim()];
+  if (viewRadians == null || !config) return null;
+  const dx = Math.sin(viewRadians) * config.xMult;
+  const dy = Math.cos(viewRadians) * config.yMult;
+  return Math.atan2(dy, dx) * (180 / Math.PI);
 }

@@ -5,6 +5,20 @@
   --color-valo-dark: #111111;
   --color-valo-light: #ece8e1;
   --color-valo-gray: #1f2326;
+
+  /* Typography: one sans family, one scale. Nothing renders under --text-min (13px).
+     Classes: text-title (32) text-section (20) text-body (16) text-secondary (14) text-min (13) */
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --text-title: 2rem;
+  --text-title--line-height: 2.5rem;
+  --text-section: 1.25rem;
+  --text-section--line-height: 1.75rem;
+  --text-body: 1rem;
+  --text-body--line-height: 1.5rem;
+  --text-secondary: 0.875rem;
+  --text-secondary--line-height: 1.25rem;
+  --text-min: 0.8125rem;
+  --text-min--line-height: 1.125rem;
   
   --animate-fade-in: fadeIn 0.5s ease-out forwards;
   --animate-slide-up: slideUp 0.4s ease-out forwards;
@@ -22,12 +36,20 @@
 body {
   background-color: var(--color-valo-dark);
   color: var(--color-valo-light);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
   -webkit-font-smoothing: antialiased;
 }
+
+/* Data never switches to a monospace font: digits line up with tabular-nums instead */
+table, .tabular-nums, [data-num] {
+  font-variant-numeric: tabular-nums;
+}
+
 
 .glass-panel {
   background-color: color-mix(in srgb, var(--color-valo-gray) 80%, transparent);
   backdrop-filter: blur(12px);
-  border: 1px solid color-mix(in srgb, white 5%, transparent);
+  border: 1px solid color-mix(in srgb, white 8%, transparent);
   border-radius: 0.75rem;
 }

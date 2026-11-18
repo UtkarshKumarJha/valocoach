@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
- * Adds a list of Riot accounts to the label-pool crawler frontier (local data/label_pool, never committed).
+ * Adds a list of Riot accounts (e.g. the AP leaderboard snowball in ml/data) to the label-pool crawler frontier (local data/label_pool, never committed).
  * Lines look like "Name#TAG" or "Name#TAG#region". The crawler picks them up while someone is labeling.
- * Usage: node scripts/seed_label_pool.js ml/data/unprocessed_players.txt [source=scraped]
+ * Usage: node scripts/seed_label_pool.js ml/data/unprocessed_players.txt [source=leaderboard]
  */
 const fs = require('fs');
 const path = require('path');
 const labelPool = require(path.resolve(__dirname, '../backend/src/services/labelPoolService'));
 
-const [file, source = 'scraped'] = process.argv.slice(2);
+const [file, source = 'leaderboard'] = process.argv.slice(2);
 if (!file) {
   console.error('Usage: node scripts/seed_label_pool.js <players.txt> [source]');
   process.exit(1);

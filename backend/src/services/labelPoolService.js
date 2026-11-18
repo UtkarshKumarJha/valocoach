@@ -33,7 +33,7 @@ const LEASE_MS = 10 * 60 * 1000;       // a served round is held for its rater s
 const MAX_POOL_MATCHES = 5000;
 const FRONTIER_CAP = 8000;
 const SEED_RECRAWL_MS = 24 * 60 * 60 * 1000; // seeds (pros, friends) get re-crawled daily for new games
-const SOURCES = ['owner', 'friend', 'pro', 'teammate', 'scraped', 'snowball'];
+const SOURCES = ['owner', 'friend', 'pro', 'teammate', 'leaderboard', 'snowball'];
 const DEFAULT_REGION = process.env.LABEL_POOL_REGION || 'ap';
 
 let state = null;        // { seeds, frontier, crawled, matchSources, lastError, lastFetchAt }

@@ -1,0 +1,26 @@
+# Render Blueprint: the Express API. Secrets are entered in the Render dashboard (sync: false), never committed.
+services:
+  - type: web
+    name: valocoach-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: node src/server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: HENRIK_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      # Share this with friends; without it the labeler is closed in production
+      - key: LABELER_INVITE_CODE
+        sync: false
+      # Your Vercel URL, e.g. https://valocoach.vercel.app
+      - key: FRONTEND_ORIGIN
+        sync: false

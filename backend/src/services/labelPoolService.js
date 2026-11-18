@@ -31,9 +31,9 @@ const MIN_CRAWL_GAP_MS = 20 * 1000;    // at most ~3 list calls/min, leaving bud
 const ACTIVE_WINDOW_MS = 10 * 60 * 1000;
 const LEASE_MS = 10 * 60 * 1000;       // a served round is held for its rater so friends don't get duplicates
 const MAX_POOL_MATCHES = 5000;
-const FRONTIER_CAP = 3000;
+const FRONTIER_CAP = 8000;
 const SEED_RECRAWL_MS = 24 * 60 * 60 * 1000; // seeds (pros, friends) get re-crawled daily for new games
-const SOURCES = ['owner', 'friend', 'pro', 'teammate', 'snowball'];
+const SOURCES = ['owner', 'friend', 'pro', 'teammate', 'scraped', 'snowball'];
 const DEFAULT_REGION = process.env.LABEL_POOL_REGION || 'ap';
 
 let state = null;        // { seeds, frontier, crawled, matchSources, lastError, lastFetchAt }
@@ -454,9 +454,18 @@ function getStatus() {
   };
 }
 
+/** Bulk-add accounts (e.g. a scraped player list) to the frontier; returns how many were new. */
+function addAccounts(entries, source) {
+  init();
+  const before = state.frontier.length;
+  for (const e of entries) addToFrontier({ riotId: e.riotId, region: e.region || DEFAULT_REGION, source, tier: e.tier || 'Unranked', addedAt: Date.now() });
+  saveState();
+  return state.frontier.length - before;
+}
+
 /** Rebuild the labeled-set after labels arrive from Mongo (no-op before the pool is loaded). */
 function refreshLabels() {
   if (candidates) refreshLabelIndex();
 }
 
-module.exports = { init, refreshLabels, nextRound, markLabeled, addSeed, getStatus, ensureCrawler, _internals: { addMatch, pickNextAccount } };
+module.exports = { init, addAccounts, refreshLabels, nextRound, markLabeled, addSeed, getStatus, ensureCrawler, _internals: { addMatch, pickNextAccount } };

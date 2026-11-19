@@ -145,3 +145,28 @@ describe('Narrator validation (evidence-bound)', () => {
     }
   });
 });
+
+describe('Fixture anonymization (every nested player identity)', () => {
+  const fs = require('fs');
+  const path = require('path');
+  // Placeholder names used by the anonymizer; anything else attached to a player is a real Riot ID
+  const ANON = /^(Player_\d{4}|Peer_[A-Za-z0-9]+|Subject_Player|Player_Subject|Opponent_\d+|Teammate_\d+|Ally\d*|Enemy\w*|Subject|Peeker|Entry|Cluster|Me|E\d)$/;
+  const dir = path.join(__dirname, 'fixtures');
+  test.each(fs.readdirSync(dir).filter(f => f.endsWith('.json')))('%s has no real player names or PUUIDs', f => {
+    const bad = new Set();
+    const walk = o => {
+      if (Array.isArray(o)) return o.forEach(walk);
+      if (!o || typeof o !== 'object') return;
+      if ('puuid' in o && typeof o.name === 'string' && !ANON.test(o.name)) bad.add(o.name);
+      for (const k of ['player_display_name', 'killer_display_name', 'victim_display_name', 'player_riot_id']) {
+        if (typeof o[k] === 'string' && o[k] && !ANON.test(o[k].split('#')[0])) bad.add(o[k].split('#')[0]);
+      }
+      for (const k of ['puuid', 'player_puuid', 'killer_puuid', 'victim_puuid']) {
+        if (typeof o[k] === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-/.test(o[k])) bad.add(`raw puuid in ${k}`);
+      }
+      Object.values(o).forEach(walk);
+    };
+    walk(JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')));
+    expect([...bad]).toEqual([]);
+  });
+});

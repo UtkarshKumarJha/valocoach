@@ -1,31 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Loader2, Activity, Sparkles } from 'lucide-react';
-
-const LOADING_STAGES = [
-  'Querying official Riot match telemetry...',
-  'Ingesting round economy & spatial kill coordinates...',
-  'Auto-detecting player role & playstyle archetype...',
-  'Computing role-conditioned habits vs empirical peer baselines...',
-  'Synthesizing tactical coaching debrief via Gemini AI...'
-];
+import React, { useState } from 'react';
+import { Search, Loader2 } from 'lucide-react';
 
 export default function SearchHero({ onSearch, isLoading }) {
   const [riotId, setRiotId] = useState('');
   const [region, setRegion] = useState('ap');
-  const [stageIndex, setStageIndex] = useState(0);
-
-  useEffect(() => {
-    if (!isLoading) return;
-    const interval = setInterval(() => {
-      setStageIndex((prev) => (prev + 1) % LOADING_STAGES.length);
-    }, 2500);
-    return () => clearInterval(interval);
-  }, [isLoading]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (riotId.includes('#')) {
-      setStageIndex(0);
       const [name, tag] = riotId.split('#');
       onSearch(region, name, tag);
     }
@@ -84,21 +66,6 @@ export default function SearchHero({ onSearch, isLoading }) {
           </button>
         </div>
 
-        {/* Live Loading Stage Tracker */}
-        {isLoading && (
-          <div className="glass-panel p-3.5 bg-black/50 border border-valo-red/30 rounded-xl flex items-center justify-center gap-3 animate-pulse">
-            <Activity className="w-4 h-4 text-valo-red animate-spin" />
-            <span className="text-min font-bold text-gray-300">
-              {LOADING_STAGES[stageIndex]}
-            </span>
-          </div>
-        )}
-
-        {/* System Auto-Detection Callout */}
-        <div className="inline-flex items-center gap-2 text-min font-semibold text-gray-400 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full">
-          <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
-          <span>Auto-detects Playstyle Archetype, Primary Role, and Map from recent matches</span>
-        </div>
       </form>
     </div>
   );

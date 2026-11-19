@@ -145,6 +145,10 @@ function App() {
         ) : !data ? (
           <>
             <SearchHero onSearch={handleSearch} isLoading={isLoading} />
+            {/* Real status only: sync progress for a new player, otherwise the report is being built */}
+            {isLoading && !syncProgress && (
+              <p className="max-w-xl mx-auto mt-4 text-center text-secondary text-gray-300">Building your report…</p>
+            )}
             {syncProgress && (
               <div className="max-w-xl mx-auto mt-4 rounded-xl bg-gray-900/80 border border-white/10 p-4 text-body text-gray-200">
                 <div>First visit: fetching your recent matches ({syncProgress.processed || 0} of {syncProgress.total || 50}). This takes about a minute.</div>

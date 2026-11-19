@@ -265,7 +265,7 @@ function Chat({ analysis }) {
 
 export default function Dashboard({ data, onSwitchContext, isSwitching }) {
   const { analysis, debrief } = data;
-  const { player, actual_rank, trends, spatial_data, session_analytics, economy_analytics, telemetry_intelligence: ti = {}, context } = analysis;
+  const { player, actual_rank, trends, spatial_data, session_analytics, economy_analytics, context } = analysis;
   const habits = analysis.habits || [];
   const [role, setRole] = useState('all');
   const [side, setSide] = useState('both');
@@ -274,9 +274,24 @@ export default function Dashboard({ data, onSwitchContext, isSwitching }) {
   const inView = h => (role === 'all' || h.role === role) && (side === 'both' || h.side === side);
   const strengths = habits.filter(h => h.polarity === 'positive' && isShown(h) && inView(h));
   const flaws = habits.filter(h => h.polarity === 'flaw' && isShown(h) && inView(h));
-  const watch = habits.find(h => h.cell === ti.watch_item?.cell);
-  const showWatch = !flaws.length && watch && inView(watch);
-  const focus = analysis.next_focus;
+  // Unproven but measured: within normal range of peers. Shown as "not a pattern yet" so a view never looks empty
+  const measured = h => inView(h) && h.n >= 15 && h.k > 0 && h.tier === 'occasional' && h.peer_baseline?.p0 != null;
+  const gap = h => h.rate - h.peer_baseline.p0;
+  const biggestGap = polarity => habits.filter(h => h.polarity === polarity && measured(h) && gap(h) > 0).sort((a, b) => gap(b) - gap(a))[0];
+  const leadStrength = strengths.length ? null : biggestGap('positive');
+  const watchFlaw = flaws.length ? null : biggestGap('flaw');
+  const viewHabits = habits.filter(inView);
+  const measuredCount = viewHabits.filter(h => h.n >= 15 && h.polarity !== 'info' && h.tier !== 'not applicable for role' && h.tier !== 'not enough data').length;
+  // Same rule as the backend's next_focus, applied to the current view: proven flaw > closest flaw > proven strength
+  const focusHabit = flaws[0] || watchFlaw || strengths[0];
+  const focus = focusHabit && {
+    type: focusHabit.polarity === 'flaw' ? 'reduce' : 'keep',
+    cell: focusHabit.cell, title: focusHabit.title, role: focusHabit.role, side: focusHabit.side,
+    current_pct: focusHabit.ratePct,
+    target_pct: focusHabit.polarity === 'flaw' ? focusHabit.peer_baseline.p0_pct : focusHabit.ratePct,
+    proven: isShown(focusHabit)
+  };
+  const normalRange = `All ${measuredCount} measured habits in this view are within the normal range of players like you. The All habits tab has every number.`;
   const ht = trends?.habit_trend;
   const roleMix = analysis.role_mix || {};
   const matchesInView = role === 'all' ? analysis.total_matches_analyzed : (roleMix[role] || 0);
@@ -313,12 +328,14 @@ export default function Dashboard({ data, onSwitchContext, isSwitching }) {
       {/* Your report */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <Panel title="Strengths">
-          {strengths.length ? strengths.map(h => <HabitCard key={h.cell} h={h} />) : <Empty>Nothing in this view is clearly above players like you yet.</Empty>}
+          {strengths.length ? strengths.map(h => <HabitCard key={h.cell} h={h} />)
+            : leadStrength ? (<><p className="text-secondary text-gray-400">Nothing proven yet. Where you're most ahead:</p><HabitCard h={leadStrength} label="Not a pattern yet" /></>)
+              : <Empty>{measuredCount ? normalRange : 'Not enough chances in this view yet.'}</Empty>}
         </Panel>
         <Panel title="Work on">
           {flaws.length ? flaws.map(h => <HabitCard key={h.cell} h={h} />)
-            : showWatch ? (<><p className="text-secondary text-gray-400">No proven weak habit. Closest one to watch:</p><HabitCard h={watch} label="Not a pattern yet" /></>)
-              : <Empty>No habit in this view is clearly worse than players like you.</Empty>}
+            : watchFlaw ? (<><p className="text-secondary text-gray-400">No proven weak habit. Closest one to watch:</p><HabitCard h={watchFlaw} label="Not a pattern yet" /></>)
+              : <Empty>{measuredCount ? normalRange : 'Not enough chances in this view yet.'}</Empty>}
         </Panel>
         <Panel title="Next session">
           {focus ? (
@@ -333,7 +350,7 @@ export default function Dashboard({ data, onSwitchContext, isSwitching }) {
                 <p className="text-secondary text-gray-300">Last {trends.matches_count} matches: {ht.older.rate_pct}% then {ht.newer.rate_pct}% ({ht.verdict}).</p>
               )}
             </div>
-          ) : <Empty>Play more matches on one role so there is something solid to aim at.</Empty>}
+          ) : <Empty>Nothing in this view stands out enough to set a goal. Play more matches here or pick another view.</Empty>}
         </Panel>
       </div>
 
@@ -352,7 +369,7 @@ export default function Dashboard({ data, onSwitchContext, isSwitching }) {
         )}
         {tab === 'economy' && <EconomyTab eco={economy_analytics} />}
         {tab === 'trends' && <TrendsTab trends={trends} session={session_analytics} />}
-        {tab === 'details' && <DetailsTab habits={habits} />}
+        {tab === 'details' && <DetailsTab habits={viewHabits} />}
       </section>
 
       <Chat analysis={analysis} />

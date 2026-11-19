@@ -12,6 +12,14 @@ from PIL import Image
 POOL = sys.argv[1] if len(sys.argv) > 1 else 'data/label_pool/matches'
 maps = {m['displayName'].lower(): m for m in json.load(urllib.request.urlopen('https://valorant-api.com/v1/maps'))['data'] if m.get('xMultiplier')}
 
+# Every minimap image URL in mapUtils.js must be the official one (a wrong Haven URL once 404'd silently)
+import re
+src = open('frontend/src/utils/mapUtils.js').read()
+bad_icons = [k for k, url in re.findall(r"(\w+): \{\s*name: '[^']+',[\s\S]*?icon: '([^']+)'", src)
+             if k in maps and url != maps[k]['displayIcon']]
+for k in bad_icons:
+    print(f'{k:10s} icon URL differs from valorant-api.com: {maps[k]["displayIcon"]}')
+
 deaths = {}
 for fn in glob.glob(f'{POOL}/*.json'):
     match = json.load(open(fn))['match']
@@ -33,4 +41,4 @@ for name, pts in sorted(deaths.items()):
     pct = 100 * on / len(pts)
     worst = min(worst, pct)
     print(f'{name:10s} deaths={len(pts):6d}  on-map {pct:5.1f}%')
-sys.exit(0 if worst >= 97 else 1)
+sys.exit(0 if worst >= 97 and not bad_icons else 1)

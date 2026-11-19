@@ -19,6 +19,7 @@ function topSpots(events, n = 3) {
 export default function MapHeatmap({ spatialData, currentMap, onSelectMap }) {
   const [layer, setLayer] = useState('deaths');
   const [side, setSide] = useState('both');
+  const [failedSrc, setFailedSrc] = useState(null); // show a broken map image instead of a silent black square
 
   // Draw on the map the positions came from; the backend falls back to another map when the requested one has no matches
   const activeMapKey = (spatialData?.active_map || currentMap || '').toLowerCase().trim();
@@ -46,7 +47,8 @@ export default function MapHeatmap({ spatialData, currentMap, onSelectMap }) {
     <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
       <div className="md:col-span-3">
         <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-black/60 border border-white/10">
-          <img src={mapConfig.icon} alt={`${mapConfig.name} minimap`} className="absolute inset-0 w-full h-full object-contain opacity-80 select-none pointer-events-none" />
+          <img src={mapConfig.icon} alt={`${mapConfig.name} minimap`} onError={() => setFailedSrc(mapConfig.icon)} className="absolute inset-0 w-full h-full object-contain opacity-80 select-none pointer-events-none" />
+          {failedSrc === mapConfig.icon && <div className="absolute top-2 left-2 right-2 text-secondary text-amber-300 bg-black/70 rounded px-2 py-1">The {mapConfig.name} map image didn't load. Positions are still correct; reload to retry.</div>}
           {events.map((e, i) => {
             const p = worldToMiniMap(e.x, e.y, activeMapKey);
             return p && <div key={i} className={`absolute w-2.5 h-2.5 -ml-[5px] -mt-[5px] rounded-full ${dot} opacity-45`} style={{ left: `${p.left}%`, top: `${p.top}%` }} />;

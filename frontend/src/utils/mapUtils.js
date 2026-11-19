@@ -21,7 +21,7 @@ export const MAP_CONFIG = {
     yMult: -0.000075,
     xAdd: 1.09345,
     yAdd: 0.642728,
-    icon: 'https://media.valorant-api.com/maps/2bee0dc9-4da5-3a78-9403-bc880a26b36e/displayicon.png'
+    icon: 'https://media.valorant-api.com/maps/2bee0dc9-4ffe-519b-1cbd-7fbe763a6047/displayicon.png'
   },
   split: {
     name: 'Split',

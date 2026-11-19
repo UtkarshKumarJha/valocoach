@@ -65,6 +65,7 @@ function formatClock(timeMs, plantTimeMs) {
 }
 
 function Radar({ snapshot, mapName }) {
+  const [failedSrc, setFailedSrc] = useState(null); // a broken image URL or CDN hiccup must show, not leave a black map
   const key = (mapName || '').toLowerCase();
   const cfg = MAP_CONFIG[key];
   if (!snapshot) return <div className="aspect-square grid place-items-center text-gray-400">No positions were recorded at this moment.</div>;
@@ -78,7 +79,8 @@ function Radar({ snapshot, mapName }) {
 
   return (
     <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-black/60 border border-white/10">
-      <img src={cfg.icon} alt={`${cfg.name} minimap`} className="absolute inset-0 w-full h-full object-contain opacity-70" />
+      <img src={cfg.icon} alt={`${cfg.name} minimap`} onError={() => setFailedSrc(cfg.icon)} className="absolute inset-0 w-full h-full object-contain opacity-70" />
+      {failedSrc === cfg.icon && <div className="absolute top-2 left-2 right-2 text-secondary text-amber-300 bg-black/70 rounded px-2 py-1">The {cfg.name} map image didn't load. Positions are still correct; reload to retry.</div>}
       <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
         {kPos && vPos && <line x1={kPos.left} y1={kPos.top} x2={vPos.left} y2={vPos.top} stroke="#f87171" strokeWidth="0.5" strokeDasharray="1.5 1" />}
       </svg>

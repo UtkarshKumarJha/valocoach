@@ -200,7 +200,8 @@ function buildRadarSnapshot(killEvent, matchData, subjectRiotId, subjectPuuid) {
     killer: {
       name: killEvent.killer_display_name,
       team: killEvent.killer_team,
-      weapon: killEvent.damage_weapon_name || 'Vandal'
+      weapon: killEvent.damage_weapon_name || null,
+      weaponType: killEvent.damage_weapon_type || null
     },
     victim: {
       name: killEvent.victim_display_name,
@@ -456,7 +457,8 @@ async function appendVerdict(verdict) {
     role,
     map,
     rank_band,
-    source
+    source,
+    utility_blocked // labeler said missing utility info would change the answer
   } = verdict;
 
   if (!matchId) throw new Error('matchId is required');
@@ -481,7 +483,7 @@ async function appendVerdict(verdict) {
     created_at: new Date().toISOString()
   };
   // Label-pool provenance (optional): lets us stratify precision/recall by source, rank band, map, role
-  const extras = { candidate_id, category, role, map, rank_band, source };
+  const extras = { candidate_id, category, role, map, rank_band, source, utility_blocked };
   for (const [k, v] of Object.entries(extras)) if (v != null && v !== '') record[k] = String(v);
 
   // Ensure data directory exists

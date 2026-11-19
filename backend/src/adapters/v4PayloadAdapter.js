@@ -65,6 +65,19 @@ function validateNormalizedMatch(match) {
  * @param {string} targetRiotIdOrPuuid Identifier of the target player (e.g. 'Name#TAG' or puuid)
  * @returns {Object} Normalized match object
  */
+/** One 10-player position snapshot (kill, plant or defuse moment) in the normalized shape. */
+function mapPlayerLocations(rawLocs = []) {
+  return rawLocs.map(pl => ({
+    player_puuid: pl.player?.puuid || pl.player_puuid || '',
+    player_display_name: pl.player ? `${pl.player.name}#${pl.player.tag}` : (pl.player_display_name || ''),
+    player_team: pl.player?.team || pl.player_team || null,
+    location: pl.location || null,
+    view_radians: pl.view_radians !== undefined ? pl.view_radians : null
+  }));
+}
+
+const mapPlayerRef = p => (p ? { puuid: p.puuid, display_name: `${p.name}#${p.tag}`, team: p.team } : null);
+
 function normalizeV4Match(rawV4, targetRiotIdOrPuuid = '') {
   if (!rawV4 || !rawV4.metadata) {
     throw new Error('Invalid Henrik v4 match payload: missing metadata.');
@@ -101,6 +114,8 @@ function normalizeV4Match(rawV4, targetRiotIdOrPuuid = '') {
       character: charName,
       role: getRoleForAgent(charName) || 'Unknown',
       tier: p.tier?.name || 'Unranked',
+      // Match totals only: v4 has no per-round casts and no utility positions
+      ability_casts: p.ability_casts || null,
       stats: {
         score: stats.score || 0,
         kills: stats.kills || 0,
@@ -152,11 +167,8 @@ function normalizeV4Match(rawV4, targetRiotIdOrPuuid = '') {
         plant_time_in_round: r.plant.round_time_in_ms || 0,
         site: r.plant.site || 'Site',
         location: r.plant.location || null,
-        planted_by: r.plant.player ? {
-          puuid: r.plant.player.puuid,
-          display_name: `${r.plant.player.name}#${r.plant.player.tag}`,
-          team: r.plant.player.team
-        } : null
+        planted_by: mapPlayerRef(r.plant.player),
+        player_locations: mapPlayerLocations(r.plant.player_locations)
       });
     }
 
@@ -165,11 +177,9 @@ function normalizeV4Match(rawV4, targetRiotIdOrPuuid = '') {
       defuseEvents.push({
         round_time_in_ms: r.defuse.round_time_in_ms || 0,
         defuse_time_in_round: r.defuse.round_time_in_ms || 0,
-        defused_by: r.defuse.player ? {
-          puuid: r.defuse.player.puuid,
-          display_name: `${r.defuse.player.name}#${r.defuse.player.tag}`,
-          team: r.defuse.player.team
-        } : null
+        location: r.defuse.location || null,
+        defused_by: mapPlayerRef(r.defuse.player),
+        player_locations: mapPlayerLocations(r.defuse.player_locations)
       });
     }
 
@@ -212,25 +222,11 @@ function normalizeV4Match(rawV4, targetRiotIdOrPuuid = '') {
     const victimTeam = k.victim?.team || k.victim_team || 'Blue';
 
     const deathLoc = k.location || k.victim_death_location || { x: 0, y: 0 };
-    const weaponName = k.weapon?.name || k.damage_weapon_name || 'Vandal';
+    // Falls have no weapon name (type "Fall"); ability kills carry the ability name with their own type
+    const weaponType = k.weapon?.type || null;
+    const weaponName = k.weapon?.name || k.damage_weapon_name || (weaponType === 'Fall' ? 'Fall' : null);
 
-    // Normalize player_locations_on_kill
-    const rawLocs = k.player_locations || k.player_locations_on_kill || [];
-    let playerLocs = rawLocs.map(pl => {
-      const plPuuid = pl.player?.puuid || pl.player_puuid || '';
-      const plName = pl.player ? `${pl.player.name}#${pl.player.tag}` : (pl.player_display_name || '');
-      const plTeam = pl.player?.team || pl.player_team || 'Red';
-      const loc = pl.location || { x: 0, y: 0 };
-      const viewRad = pl.view_radians !== undefined ? pl.view_radians : null;
-
-      return {
-        player_puuid: plPuuid,
-        player_display_name: plName,
-        player_team: plTeam,
-        location: loc,
-        view_radians: viewRad
-      };
-    });
+    const playerLocs = mapPlayerLocations(k.player_locations || k.player_locations_on_kill || []);
 
     // Synthesize victim into player_locations_on_kill if missing
     const hasVictimInLocs = playerLocs.some(pl => pl.player_puuid === victimPuuid || pl.player_display_name === victimName);
@@ -256,6 +252,8 @@ function normalizeV4Match(rawV4, targetRiotIdOrPuuid = '') {
       victim_team: victimTeam,
       victim_death_location: deathLoc,
       damage_weapon_name: weaponName,
+      damage_weapon_type: weaponType,
+      assistants: (k.assistants || []).map(mapPlayerRef),
       player_locations_on_kill: playerLocs
     };
   });

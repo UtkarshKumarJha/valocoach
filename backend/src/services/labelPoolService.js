@@ -304,7 +304,7 @@ function anonymizeSnapshot(snap) {
     allPlayers: snap.allPlayers.map(strip),
     combatDistanceMeters: snap.combatDistanceMeters,
     minAllyDistanceMeters: snap.minAllyDistanceMeters,
-    killer: { agent: agentOf(snap.killer?.name), team: snap.killer?.team, weapon: snap.killer?.weapon },
+    killer: { agent: agentOf(snap.killer?.name), team: snap.killer?.team, weapon: snap.killer?.weapon, weaponType: snap.killer?.weaponType },
     victim: { agent: agentOf(snap.victim?.name), team: snap.victim?.team, location: snap.victim?.location }
   };
 }
@@ -331,18 +331,53 @@ function hydrate(c) {
   const roundKills = groupKillsByRound(m.kill_events || []).get(c.round) || [];
   const r = (m.rounds || []).find((x, i) => (x.round_num || i + 1) === c.round) || {};
   const plantMs = (r.plant_events || [])[0]?.round_time_in_ms ?? null;
-  const timeline = roundKills.map(k => ({
+  const agentByPuuid = new Map((m.all_players || []).map(p => [p.puuid, p.character]));
+  const subjectTeam = (m.all_players || []).find(p => p.puuid === c.puuid)?.team;
+
+  const kills = roundKills.map(k => ({
+    kind: 'kill',
     timeMs: Number(k.kill_time_in_round || 0),
     postPlant: plantMs != null && Number(k.kill_time_in_round || 0) >= plantMs,
+    assists: (k.assistants || []).map(a => agentByPuuid.get(a?.puuid)).filter(Boolean),
     snapshot: anonymizeSnapshot(buildRadarSnapshot(k, m, c.riotId, c.puuid))
   }));
   // Situation ids end in the kill's index (borderline/unflagged) or its floored ms (flagged): pin the exact kill
   const idxMatch = c.sid.match(/_(?:borderline|unflagged|unflagged_frag)_(\d+)$/);
   const msMatch = c.sid.match(/_(\d+)$/);
-  let focusIndex = idxMatch ? Number(idxMatch[1]) : timeline.findIndex(t => Math.floor(t.timeMs) === Number(msMatch?.[1]));
-  if (focusIndex < 0 || focusIndex >= timeline.length) {
-    focusIndex = Math.max(0, timeline.findIndex(t => Math.abs(t.timeMs / 1000 - s.elapsedSec) < 0.05));
+  let focusKill = idxMatch ? Number(idxMatch[1]) : kills.findIndex(t => Math.floor(t.timeMs) === Number(msMatch?.[1]));
+  if (focusKill < 0 || focusKill >= kills.length) {
+    focusKill = Math.max(0, kills.findIndex(t => Math.abs(t.timeMs / 1000 - s.elapsedSec) < 0.05));
   }
+  if (kills[focusKill]) kills[focusKill].focus = true;
+
+  // Plant / defuse moments: v4 records a full position snapshot for them too (older pool matches may not have it)
+  const spikeEvents = [['plant', r.plant_events], ['defuse', r.defuse_events]].flatMap(([kind, evs]) => (evs || []).map(ev => ({
+    kind,
+    timeMs: Number(ev.round_time_in_ms || 0),
+    postPlant: kind === 'defuse',
+    site: ev.site || null,
+    snapshot: ev.player_locations?.length ? {
+      map: m.map,
+      spike: ev.location || null,
+      allPlayers: ev.player_locations.map(pl => ({
+        character: agentByPuuid.get(pl.player_puuid) || 'Unknown',
+        team: pl.player_team,
+        location: pl.location,
+        view_radians: pl.view_radians,
+        isSubject: pl.player_puuid === c.puuid,
+        isAlly: pl.player_team === subjectTeam
+      }))
+    } : null
+  })));
+  const timeline = [...kills, ...spikeEvents].sort((a, b) => a.timeMs - b.timeMs);
+  const focusIndex = Math.max(0, timeline.findIndex(t => t.focus));
+
+  // Utility is only recorded as whole-match totals per player (no positions, no per-round counts)
+  const rounds = (m.rounds || []).length || 1;
+  const utility = (m.all_players || []).filter(p => p.ability_casts).map(p => {
+    const total = Object.values(p.ability_casts).reduce((a, v) => a + (Number(v) || 0), 0);
+    return { agent: p.character, isAlly: p.team === subjectTeam, isSubject: p.puuid === c.puuid, total, perRound: Number((total / rounds).toFixed(1)) };
+  });
 
   return {
     candidate_id: c.id,
@@ -362,7 +397,8 @@ function hydrate(c) {
     plantTimeMs: plantMs,
     evidence: anonymizeEvidence(s.evidence, m),
     timeline,
-    focusIndex
+    focusIndex,
+    utility: utility.length ? utility : null
   };
 }
 

@@ -170,3 +170,21 @@ describe('Fixture anonymization (every nested player identity)', () => {
     expect([...bad]).toEqual([]);
   });
 });
+
+describe('v4 adapter keeps the utility-related signals the labeler shows', () => {
+  const { normalizeV4Match } = require('../src/adapters/v4PayloadAdapter');
+  const raw = require('./fixtures/v4_raw_contract_fixture.json');
+  const m = normalizeV4Match(raw.data || raw, 'puuid_anon_0001');
+  test('per-player match utility totals, kill assists and weapon type survive normalization', () => {
+    expect(m.all_players.every(p => p.ability_casts && typeof p.ability_casts.grenade === 'number')).toBe(true);
+    expect(m.kill_events.some(k => k.assistants.length > 0)).toBe(true);
+    expect(m.kill_events.every(k => 'damage_weapon_type' in k)).toBe(true);
+  });
+  test('plant events keep their 10-player snapshot; falls are not reported as Vandal kills', () => {
+    const plant = m.rounds.flatMap(r => r.plant_events)[0];
+    expect(plant.player_locations.length).toBeGreaterThan(0);
+    const falls = m.kill_events.filter(k => k.damage_weapon_type === 'Fall');
+    expect(falls.length).toBeGreaterThan(0);
+    falls.forEach(k => expect(k.damage_weapon_name).toBe('Fall'));
+  });
+});

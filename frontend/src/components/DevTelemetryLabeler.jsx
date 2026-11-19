@@ -67,7 +67,7 @@ function formatClock(timeMs, plantTimeMs) {
 function Radar({ snapshot, mapName }) {
   const key = (mapName || '').toLowerCase();
   const cfg = MAP_CONFIG[key];
-  if (!snapshot) return <div className="aspect-square grid place-items-center text-gray-400">No snapshot for this kill.</div>;
+  if (!snapshot) return <div className="aspect-square grid place-items-center text-gray-400">No positions were recorded at this moment.</div>;
   if (!cfg) return <div className="aspect-square grid place-items-center text-gray-400 text-center p-6">Map "{mapName}" is not calibrated yet, so positions can't be drawn.</div>;
 
   const pos = loc => (loc ? worldToMiniMap(loc.x, loc.y, key) : null);
@@ -88,6 +88,10 @@ function Radar({ snapshot, mapName }) {
           <div key={site.letter} className="absolute -translate-x-1/2 -translate-y-1/2 text-body font-bold text-white/60" style={{ left: `${p.left}%`, top: `${p.top}%` }}>{site.letter}</div>
         );
       })}
+      {snapshot.spike && pos(snapshot.spike) && (
+        <div title="Spike" className="absolute -translate-x-1/2 -translate-y-1/2 w-5 h-5 rotate-45 bg-amber-400 border-2 border-black z-10"
+          style={{ left: `${pos(snapshot.spike).left}%`, top: `${pos(snapshot.spike).top}%` }} />
+      )}
       {snapshot.allPlayers.map((p, i) => {
         const at = pos(p.location);
         if (!at) return null;
@@ -156,6 +160,7 @@ export default function DevTelemetryLabeler() {
   const [error, setError] = useState(null);
   const [picking, setPicking] = useState(false);
   const [note, setNote] = useState('');
+  const [utilityBlocked, setUtilityBlocked] = useState(false);
   const [status, setStatus] = useState(null);
   const [sessionCount, setSessionCount] = useState(0);
   const [showSources, setShowSources] = useState(false);
@@ -171,6 +176,7 @@ export default function DevTelemetryLabeler() {
     setError(null);
     setPicking(false);
     setNote('');
+    setUtilityBlocked(false);
     try {
       const r = await api.get('/api/dev/next', { params: { rater, focus: focus || undefined } });
       if (r.status === 204 || !r.data) {
@@ -223,6 +229,7 @@ export default function DevTelemetryLabeler() {
         justified,
         confidence: humanLabel === 'UNSURE' ? 1 : 3,
         why: note.trim(),
+        utility_blocked: utilityBlocked || undefined,
         rater
       });
       setSessionCount(c => c + 1);
@@ -233,7 +240,7 @@ export default function DevTelemetryLabeler() {
     } finally {
       saving.current = false;
     }
-  }, [card, note, rater, loadNext, loadStatus]);
+  }, [card, note, utilityBlocked, rater, loadNext, loadStatus]);
 
   const flagged = card?.category === 'flagged';
   const answerRight = () => save(flagged ? card.detector_tag : NOTHING_WRONG, 'Y');
@@ -340,7 +347,10 @@ export default function DevTelemetryLabeler() {
                 {card.timeline.map((t, i) => (
                   <button key={i} onClick={() => setFrame(i)}
                     className={`shrink-0 rounded-lg px-2.5 py-1.5 text-min border tabular-nums ${i === frame ? 'bg-white/20 border-white/40' : 'bg-black/30 border-white/10'} ${i === card.focusIndex ? 'ring-1 ring-yellow-300' : ''}`}>
-                    {formatClock(t.timeMs, card.plantTimeMs).split(' · ')[0]} {t.snapshot?.killer?.agent} ✕ {t.snapshot?.victim?.agent}
+                    {formatClock(t.timeMs, card.plantTimeMs).split(' · ')[0]}{' '}
+                    {t.kind === 'plant' ? `Spike planted${t.site ? ` ${t.site}` : ''}`
+                      : t.kind === 'defuse' ? 'Spike defused'
+                        : <>{t.snapshot?.killer?.agent} ✕ {t.snapshot?.victim?.agent}{t.assists?.length ? ` (+${t.assists.join(', ')})` : ''}</>}
                   </button>
                 ))}
               </div>
@@ -348,7 +358,8 @@ export default function DevTelemetryLabeler() {
             </div>
             <div className="text-min text-gray-400">
               Yellow ring = player being judged · cyan = their team · red = enemies · line = where each player was looking.
-              Positions exist only at kill moments; players who died earlier are not shown; utility usage is not in the data.
+              Positions exist only at kills, plants and defuses; players who died earlier are not shown.
+              Where and when utility was thrown is not recorded anywhere in the match data; only per-match totals and kill assists are.
             </div>
           </div>
 
@@ -357,8 +368,34 @@ export default function DevTelemetryLabeler() {
             <div className="rounded-xl bg-gray-900/80 border border-white/10 p-4 space-y-1.5">
               <div className="text-section font-semibold">{card.agent} <span className="text-gray-400 font-normal">({card.role})</span> · {card.side}</div>
               <div className="text-gray-300">{card.map} · Round {card.round} · {card.rank_band}</div>
-              <div className="text-gray-300 tabular-nums">Showing kill {frame + 1}/{card.timeline.length}: {formatClock(card.timeline[frame]?.timeMs || 0, card.plantTimeMs)}</div>
-              {snap && <div className="text-gray-300">{snap.killer?.agent} killed {snap.victim?.agent} with {snap.killer?.weapon} · {snap.combatDistanceMeters} m</div>}
+              <div className="text-gray-300 tabular-nums">Moment {frame + 1}/{card.timeline.length}: {formatClock(card.timeline[frame]?.timeMs || 0, card.plantTimeMs)}</div>
+              {card.timeline[frame]?.kind === 'kill' && snap && (
+                <div className="text-gray-300">
+                  {snap.killer?.agent} killed {snap.victim?.agent} with {snap.killer?.weapon || 'an unknown weapon'}
+                  {['Ability', 'Ultimate'].includes(snap.killer?.weaponType) ? ' (ability)' : ''} · {snap.combatDistanceMeters} m
+                  {card.timeline[frame]?.assists?.length > 0 && <div>Assisted by {card.timeline[frame].assists.join(', ')} (assists are often flashes, stuns or recon)</div>}
+                </div>
+              )}
+              {card.timeline[frame]?.kind === 'plant' && <div className="text-gray-300">Spike planted{card.timeline[frame].site ? ` on ${card.timeline[frame].site}` : ''}. Yellow diamond = spike.</div>}
+            </div>
+
+            <div className="rounded-xl bg-gray-900/80 border border-white/10 p-4 space-y-1.5">
+              <div className="font-semibold">Utility used this match</div>
+              {card.utility ? (
+                <>
+                  <div className="grid grid-cols-2 gap-x-4 text-secondary tabular-nums">
+                    {[true, false].map(ally => (
+                      <div key={String(ally)} className="space-y-0.5">
+                        <div className={ally ? 'text-cyan-300' : 'text-rose-300'}>{ally ? 'Their team' : 'Enemies'}</div>
+                        {card.utility.filter(u => u.isAlly === ally).map((u, i) => (
+                          <div key={i} className={u.isSubject ? 'text-yellow-300' : 'text-gray-300'}>{u.agent}: {u.perRound} per round</div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-min text-gray-400">Whole-match totals: they show how much a player uses utility, not what was up in this round.</div>
+                </>
+              ) : <div className="text-secondary text-gray-400">Not recorded for this match (fetched before utility totals were saved).</div>}
             </div>
 
             <div className="rounded-xl bg-gray-900/80 border border-white/10 p-4 space-y-3">
@@ -408,10 +445,14 @@ export default function DevTelemetryLabeler() {
                 </div>
               )}
 
+              <label className="flex items-start gap-2 text-secondary text-gray-300 cursor-pointer">
+                <input type="checkbox" checked={utilityBlocked} onChange={e => setUtilityBlocked(e.target.checked)} className="mt-1" />
+                Not knowing the utility (smokes, flashes) changes my answer
+              </label>
               <input value={note} onChange={e => setNote(e.target.value)} placeholder="Optional note (why?)" className="w-full bg-black/40 border border-white/15 rounded-lg px-3 py-2" />
               <button onClick={loadNext} className="flex items-center gap-1.5 text-gray-400 hover:text-white"><SkipForward className="w-4 h-4" />Skip (S)</button>
             </div>
-            <div className="text-min text-gray-400">Keys: 1 / 2 / 3 answer · ← → step through the round's kills · S skip</div>
+            <div className="text-min text-gray-400">Keys: 1 / 2 / 3 answer · ← → step through the round · S skip</div>
           </div>
         </div>
       )}
